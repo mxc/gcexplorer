@@ -1,0 +1,62 @@
+subprojects {
+    apply plugin: 'java'
+    sourceCompatibility = '1.8'
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies{
+        testCompile group: 'junit', name: 'junit', version: '4.11'
+        testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
+        testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'       
+        compile group: 'javax.inject', name: 'javax.inject', version: '1'
+    }
+}
+
+project (':GCExplorerUI'){
+    
+    mainClass = "za.co.jumpingbean.gcexplorer.ui.Main"
+    
+    dependencies {
+        compile project (':GCExplorerService')
+    }
+
+    sourceSets {
+        main { 
+            output.resourcesDir = "build/classes/main" 
+        }
+    }    
+}
+
+
+
+project (':GCExplorerService'){
+    
+    dependencies {
+        compile project (':GCGeneratorApp')
+        testCompile group: 'org.javassist', name: 'javassist', version: '3.18.2-GA'
+    }
+    
+    project.ext.mainClass="za.co.jumpingbean.gc.Generator"
+    
+}
+
+project (':GCGeneratorApp'){
+    dependencies {
+        compile group: 'com.codahale.metrics', name: 'metrics-core', version:'3.0.1'
+    }
+
+    jar {
+        from {
+            configurations.compile.collect { 
+                it.isDirectory() ? it : zipTree(it) 
+            }
+        }
+        manifest {
+            attributes "Main-Class":  "za.co.jumpingbean.gc.Generator"
+        }
+    }
+
+}
