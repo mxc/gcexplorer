@@ -9,9 +9,7 @@ import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Set;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
@@ -19,13 +17,12 @@ import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-import za.co.jumpingbean.gc.service.enums.EdenSpace;
-import za.co.jumpingbean.gc.service.enums.JVMCollector;
-import za.co.jumpingbean.gc.service.enums.OldGenerationCollector;
-import za.co.jumpingbean.gc.service.enums.OldGenerationSpace;
-import za.co.jumpingbean.gc.service.enums.PermGen;
-import za.co.jumpingbean.gc.service.enums.SurvivorSpace;
-import za.co.jumpingbean.gc.service.enums.YoungGenerationCollector;
+import za.co.jumpingbean.gc.service.constants.EdenSpace;
+import za.co.jumpingbean.gc.service.constants.OldGenerationCollector;
+import za.co.jumpingbean.gc.service.constants.OldGenerationSpace;
+import za.co.jumpingbean.gc.service.constants.PermGen;
+import za.co.jumpingbean.gc.service.constants.SurvivorSpace;
+import za.co.jumpingbean.gc.service.constants.YoungGenerationCollector;
 
 /**
  *
@@ -33,22 +30,42 @@ import za.co.jumpingbean.gc.service.enums.YoungGenerationCollector;
  */
 public class JMXQueryRunner {
 
-    private final MBeanServerConnection server;
+    private MBeanServerConnection server;
     private GarbageCollectorMXBean oldGenCollector;
     private GarbageCollectorMXBean youngGenCollector;
     private MemoryPoolMXBean edenSpace;
     private MemoryPoolMXBean survivorSpace;
-    private MemoryPoolMXBean permGen;
-    private MemoryPoolMXBean oldGen;
+    private MemoryPoolMXBean permGenSpace;
+    private MemoryPoolMXBean oldGenSpace;
 
-
-    public JMXQueryRunner(String port) throws IOException, MalformedObjectNameException {
-        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi:"
-                + "//127.0.0.1:" + port + "/jmxrmi");
-        JMXConnector conn = JMXConnectorFactory.connect(url);
-        server = conn.getMBeanServerConnection();
+    private JMXQueryRunner(String port) throws IOException {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("jmx.remote.x.request.waiting.timeout", "3000");
+        JMXConnector conn = null;
+        try {
+            JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi:"
+                    + "//127.0.0.1:" + port + "/jmxrmi");
+            conn = JMXConnectorFactory.connect(url, map);
+            server = conn.getMBeanServerConnection();
+        } catch (IOException ex) {
+            if (conn != null) {
+                conn.close();
+            }
+            server = null;
+            throw new IOException("Time out connecting to JMX port.");
+        }
     }
 
+    public static JMXQueryRunner createJXMQueryRunner(String port) throws
+            IOException {
+        JMXQueryRunner qry = new JMXQueryRunner(port);
+        qry.init();
+        return qry;
+    }
+
+    /**
+     * Must be called after JMXConnection creation to initialise MBeans
+     */
     public void init() {
         try {
             this.getCollectors();
@@ -59,7 +76,7 @@ public class JMXQueryRunner {
     }
 
     private void getCollectors() throws MalformedObjectNameException,
-            IOException {
+            IOException, IllegalStateException {
         Set<ObjectName> gcNames = server.queryNames(new ObjectName(
                 ManagementFactory.GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE
                 + ",name=*"), null);
@@ -67,47 +84,37 @@ public class JMXQueryRunner {
             GarbageCollectorMXBean bean = (ManagementFactory.
                     newPlatformMXBeanProxy(server, objName.toString(),
                             GarbageCollectorMXBean.class));
-            try {
-                OldGenerationCollector.getEnum(bean.getName());
+            if (OldGenerationCollector.isMember(bean.getName())) {
                 oldGenCollector = bean;
-            } catch (IllegalArgumentException ex) {
-                YoungGenerationCollector.getEnum(bean.getName());
+            } else if (YoungGenerationCollector.isMember(bean.getName())) {
                 youngGenCollector = bean;
+            } else {
+                throw new IllegalStateException("Collector not found");
             }
         }
     }
 
     private void getMemoryPools() throws MalformedObjectNameException,
-            IOException {
+            IOException, IllegalStateException {
         Set<ObjectName> memPoolNames = server.queryNames(new ObjectName(
                 ManagementFactory.MEMORY_POOL_MXBEAN_DOMAIN_TYPE
                 + ",name=*"), null);
         for (ObjectName objName : memPoolNames) {
             MemoryPoolMXBean bean = ManagementFactory.newPlatformMXBeanProxy(server,
                     objName.toString(), MemoryPoolMXBean.class);
-            try {
-                EdenSpace.getEnum(bean.getName());
+            if (EdenSpace.isMember(bean.getName())) {
                 this.edenSpace = bean;
-            } catch (IllegalArgumentException ex) {
-
-            }
-            try {
-                SurvivorSpace.getEnum(bean.getName());
+            } else if (SurvivorSpace.isMember(bean.getName())) {
                 this.survivorSpace = bean;
-            } catch (IllegalArgumentException ex) {
-
-            }
-            try {
-                PermGen.getEnum(bean.getName());
-                this.permGen = bean;
-            } catch (IllegalArgumentException ex) {
-
-            }
-            try {
-                OldGenerationSpace.getEnum(bean.getName());
-                this.oldGen = bean;
-            } catch (IllegalArgumentException ex) {
-
+            } else if (PermGen.isMember(bean.getName())) {
+                this.permGenSpace = bean;
+            } else if (OldGenerationSpace.isMember(bean.getName())) {
+                this.oldGenSpace = bean;
+            } else if (bean.getName().equals("Compressed Class Space")||
+                   bean.getName().equals("Code Cache")){
+                    //Not mapped yet, from G1 collector
+            }else {
+                throw new IllegalStateException("Memory pool not found " + bean.getName());
             }
         }
     }
@@ -128,13 +135,12 @@ public class JMXQueryRunner {
         return survivorSpace;
     }
 
-    public MemoryPoolMXBean getPermGen() {
-        return permGen;
+    public MemoryPoolMXBean getPermGenSpace() {
+        return permGenSpace;
     }
 
-    public MemoryPoolMXBean getOldGen() {
-        return oldGen;
+    public MemoryPoolMXBean getOldGenSpace() {
+        return oldGenSpace;
     }
-
 
 }

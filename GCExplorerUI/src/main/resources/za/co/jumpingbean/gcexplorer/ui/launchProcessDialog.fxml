@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<children><HBox prefHeight="145.0" prefWidth="600.0">
+<children>
+<VBox prefHeight="142.0" prefWidth="443.0" />
+<VBox prefHeight="145.0" prefWidth="215.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+<children>
+<RadioButton fx:id="rdbSerial" mnemonicParsing="false" selected="true" text="Serial GC">
+<toggleGroup>
+<ToggleGroup fx:id="garbageCollectorGroup" />
+</toggleGroup>
+</RadioButton>
+<RadioButton fx:id="rdbParallel" mnemonicParsing="false" text="Parallel GC" toggleGroup="$garbageCollectorGroup" />
+<RadioButton fx:id="rdbParallelOld" mnemonicParsing="false" text="Parallel Old GC" toggleGroup="$garbageCollectorGroup" />
+<RadioButton fx:id="rdbConcMarkSweep" mnemonicParsing="false" text="Conc Mark Sweep GC" toggleGroup="$garbageCollectorGroup" />
+<RadioButton fx:id="rdbG1" mnemonicParsing="false" text="G1 GC" toggleGroup="$garbageCollectorGroup" />
+</children>
+<padding>
+<Insets bottom="5.0" left="5.0" right="5.0" top="10.0" />
+</padding>
+</VBox>
+</children>
+</HBox><TextArea fx:id="txtStatus" prefHeight="157.0" prefWidth="401.0" /><Button fx:id="btnLaunch" mnemonicParsing="false" prefHeight="25.0" prefWidth="218.0" text="Launch Process" />
+</children></Pane>

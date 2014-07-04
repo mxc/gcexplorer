@@ -17,7 +17,7 @@ subprojects {
 
 project (':GCExplorerUI'){
     
-    mainClass = "za.co.jumpingbean.gcexplorer.ui.Main"
+    project.ext.mainClass = "za.co.jumpingbean.gcexplorer.ui.Main"
     
     dependencies {
         compile project (':GCExplorerService')
@@ -35,15 +35,15 @@ project (':GCExplorerUI'){
 project (':GCExplorerService'){
     
     dependencies {
-        compile project (':GCGeneratorApp')
+        compile project (':GarbageGeneratorApp')
         testCompile group: 'org.javassist', name: 'javassist', version: '3.18.2-GA'
     }
     
-    project.ext.mainClass="za.co.jumpingbean.gc.Generator"
+    //project.ext.mainClass="za.co.jumpingbean.gc.GeneratorService"
     
 }
 
-project (':GCGeneratorApp'){
+project (':GarbageGeneratorApp'){
     dependencies {
         compile group: 'com.codahale.metrics', name: 'metrics-core', version:'3.0.1'
     }

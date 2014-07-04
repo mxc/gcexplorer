@@ -1,0 +1,15 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 28 Jun 2014, 4:18:56 PM
+    Author     : mark
+*/
+
+#measure .table-cell {
+    -fx-alignment: CENTER-RIGHT;
+    -fx-background-color: red;
+}
+

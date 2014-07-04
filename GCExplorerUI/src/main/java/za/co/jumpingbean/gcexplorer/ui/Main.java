@@ -3,49 +3,60 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package za.co.jumpingbean.gcexplorer.ui;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
-
 
 /**
  *
  * @author mark
  */
 public class Main extends Application {
-    
-    
-    
-    @FXML
-    private Button btnLaunch;
-    @FXML
-    private ToggleGroup garbageCollectorGroup;
 
-    public static void main(String[] args) {
-        launch(args);
-    }    
+    private GUIStatsCollectorController processController;
+    private Units units = Units.B;
     
+    public static void main(String[] args) {
+        launch(Main.class, args);
+    }
+
+    public Units getUnits() {
+        return units;
+    }
+
+    public void setUnits(Units units) {
+        this.units = units;
+    }
+  
     @Override
     public void start(Stage primaryStage) throws Exception {
-         Parent root = FXMLLoader.load(getClass().getResource("gcexplorer.fxml"));
-         Scene scene = new Scene(root,800,600);
-         primaryStage.setTitle("GE Explorer");
-         primaryStage.setScene(scene);
-         primaryStage.show();
+        processController = new GUIStatsCollectorController(this);
+        Thread controllerThread = new Thread(processController, "GUI Stats Updater Controller");
+        controllerThread.start();
+
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("gcexplorer.fxml")
+        );
+
+        loader.setController(new MainForm(processController,this));
+        Parent pane = loader.load();
+        Scene scene = new Scene(pane, 800, 600);
+        primaryStage.setTitle("GE Explorer");
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
-    
-    @FXML
-    protected void launchProcess(ActionEvent e){
-        System.out.println("Button Pushed");
+
+    @Override
+    public void stop() throws Exception {
+        processController.stopAllProcesses();
     }
-    
+
+    public GUIStatsCollectorController getProcessController() {
+        return this.processController;
+    }
+
 }

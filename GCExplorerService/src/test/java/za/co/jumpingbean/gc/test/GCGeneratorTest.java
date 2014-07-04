@@ -5,13 +5,10 @@
  */
 package za.co.jumpingbean.gc.test;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.MemoryPoolMXBean;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -25,18 +22,19 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.hamcrest.Matchers;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import org.junit.Test;
-import za.co.jumpingbean.gc.service.Generator;
+import za.co.jumpingbean.gc.service.GeneratorService;
 import za.co.jumpingbean.gc.service.JMXQueryRunner;
-import za.co.jumpingbean.gc.service.enums.EdenSpace;
-import za.co.jumpingbean.gc.service.enums.JVMCollector;
-import za.co.jumpingbean.gc.service.enums.OldGenerationCollector;
-import za.co.jumpingbean.gc.service.enums.OldGenerationSpace;
-import za.co.jumpingbean.gc.service.enums.PermGen;
-import za.co.jumpingbean.gc.service.enums.SurvivorSpace;
-import za.co.jumpingbean.gc.service.enums.YoungGenerationCollector;
-
-
+import za.co.jumpingbean.gc.service.constants.DESC;
+import za.co.jumpingbean.gc.service.constants.EdenSpace;
+import za.co.jumpingbean.gc.service.constants.OldGenerationCollector;
+import za.co.jumpingbean.gc.service.constants.OldGenerationSpace;
+import za.co.jumpingbean.gc.service.constants.PermGen;
+import za.co.jumpingbean.gc.service.constants.SurvivorSpace;
+import za.co.jumpingbean.gc.service.constants.YoungGenerationCollector;
 
 /**
  *
@@ -50,152 +48,326 @@ public class GCGeneratorTest {
     }
 
     @Test
-    public void testSerialGCEnums() {
-        JVMCollector serial = JVMCollector.SERIALGC;
-        assertThat(EdenSpace.fromJVMCollector(serial).getJMXName(), is("Eden Space"));
-        assertThat(SurvivorSpace.fromJVMCollector(serial).getJMXName(), is("Survivor Space"));
-        assertThat(OldGenerationSpace.fromJVMCollector(serial).getJMXName(), is("Tenured Gen"));
-        assertThat(PermGen.fromJVMCollector(serial).getJMXName(), is("Perm Gen"));
+    public void testSerialGCLookups() {
 
-        assertThat(YoungGenerationCollector.fromJVMCollector(serial).getJMXName(), is("Copy"));
-        assertThat(OldGenerationCollector.fromJVMCollector(serial).getJMXName(), is("MarkSweepCompact"));
+        assertThat(EdenSpace.isMember("Eden Space"), is(true));
+        assertThat(SurvivorSpace.isMember("Survivor Space"), is(true));
+        assertThat(OldGenerationSpace.isMember("Tenured Gen"), is(true));
+
+        //JVMCollector serial = JVMCollector.SERIALGC;
+        assertThat(YoungGenerationCollector.isMember("Copy"), is(true));
+        assertThat(OldGenerationCollector.isMember("MarkSweepCompact"), is(true));
     }
 
     @Test
-    public void testParallelGCEnums() {
-        JVMCollector parallelGC = JVMCollector.PARALLELGC;
-        assertThat(EdenSpace.fromJVMCollector(parallelGC).getJMXName(), is("PS Eden Space"));
-        assertThat(SurvivorSpace.fromJVMCollector(parallelGC).getJMXName(), is("PS Survivor Space"));
-        assertThat(OldGenerationSpace.fromJVMCollector(parallelGC).getJMXName(), is("PS Old Gen"));
-        assertThat(PermGen.fromJVMCollector(parallelGC).getJMXName(), is("PS Perm Gen"));
+    public void testParallelGCLookups() throws IllegalStateException {
 
-        assertThat(YoungGenerationCollector.fromJVMCollector(parallelGC).getJMXName(), is("PS Scavenge"));
-        assertThat(OldGenerationCollector.fromJVMCollector(parallelGC).getJMXName(), is("PS MarkSweep"));
+        assertThat(EdenSpace.isMember("PS Eden Space"), is(true));
+        assertThat(SurvivorSpace.isMember("PS Survivor Space"), is(true));
+        assertThat(OldGenerationSpace.isMember("PS Old Gen"), is(true));
+
+        //JVMCollector parallelGC = JVMCollector.PARALLELGC;
+        assertThat(YoungGenerationCollector.isMember("PS Scavenge"), is(true));
+        assertThat(OldGenerationCollector.isMember("PS MarkSweep"), is(true));
+
     }
 
     @Test
-    public void testConcMarkSweepGCEnums() {
-        JVMCollector concMarkSweepGC = JVMCollector.CONCMARKSWEEP;
-        assertThat(EdenSpace.fromJVMCollector(concMarkSweepGC).getJMXName(), is("Par Eden Space"));
-        assertThat(SurvivorSpace.fromJVMCollector(concMarkSweepGC).getJMXName(), is("Par Survivor Space"));
-        assertThat(OldGenerationSpace.fromJVMCollector(concMarkSweepGC).getJMXName(), is("CMS Old Gen"));
-        assertThat(PermGen.fromJVMCollector(concMarkSweepGC).getJMXName(), is("CMS Perm Gen"));
+    public void testConcMarkSweepGCLookups() throws IllegalStateException {
+        assertThat(EdenSpace.isMember("Par Eden Space"), is(true));
+        assertThat(SurvivorSpace.isMember("Par Survivor Space"), is(true));
+        assertThat(OldGenerationSpace.isMember("CMS Old Gen"), is(true));
 
-        assertThat(YoungGenerationCollector.fromJVMCollector(concMarkSweepGC).getJMXName(), is("ParNew"));
-        assertThat(OldGenerationCollector.fromJVMCollector(concMarkSweepGC).getJMXName(), is("ConcurrentMarkSweep"));
+        //JVMCollector concMarkSweepGC = JVMCollector.CONCMARKSWEEP;
+        assertThat(YoungGenerationCollector.isMember("ParNew"), is(true));
+        assertThat(OldGenerationCollector.isMember("ConcurrentMarkSweep"), is(true));
+
     }
 
     @Test
-    public void testG1GCEnums() {
-        JVMCollector concMarkSweepGC = JVMCollector.G1GC;
-        assertThat(EdenSpace.fromJVMCollector(concMarkSweepGC).getJMXName(), is("G1 Eden Space"));
-        assertThat(SurvivorSpace.fromJVMCollector(concMarkSweepGC).getJMXName(), is("G1 Survivor Space"));
-        assertThat(OldGenerationSpace.fromJVMCollector(concMarkSweepGC).getJMXName(), is("G1 Old Gen"));
-        assertThat(PermGen.fromJVMCollector(concMarkSweepGC).getJMXName(), is("G1 Perm Gen"));
-
-        assertThat(YoungGenerationCollector.fromJVMCollector(concMarkSweepGC).getJMXName(), is("G1 Young Generation"));
-        assertThat(OldGenerationCollector.fromJVMCollector(concMarkSweepGC).getJMXName(), is("G1 Old Generation"));
+    public void testPermGenLookup() throws IllegalStateException {
+        assertThat(PermGen.isMember("Perm Gen"), is(true));
+        assertThat(PermGen.isMember("PS Perm Gen"), is(true));
+        assertThat(PermGen.isMember("CMS Perm Gen"), is(true));
+        assertThat(PermGen.isMember("G1 Perm Gen"), is(true));
+        assertThat(PermGen.isMember("Metaspace"), is(true));
     }
 
     @Test
-    public void testStartStopTestApp() throws CannotCompileException, IOException, NotFoundException, InterruptedException, MalformedObjectNameException {
+    public void testG1GCLookups() throws IllegalStateException {
+        assertThat(EdenSpace.isMember("G1 Eden Space"), is(true));
+        assertThat(SurvivorSpace.isMember("G1 Survivor Space"), is(true));
+        assertThat(OldGenerationSpace.isMember("G1 Old Gen"), is(true));
+
+        //JVMCollector concMarkSweepGC = JVMCollector.G1GC;
+        assertThat(YoungGenerationCollector.isMember("G1 Young Generation"), is(true));
+        assertThat(OldGenerationCollector.isMember("G1 Old Generation"), is(true));
+    }
+
+    @Test
+    public void testStartStopTestApp() throws CannotCompileException, IOException, NotFoundException,
+            InterruptedException, MalformedObjectNameException, IllegalStateException {
         createTmpClassMainClass();
-        Generator gen = new Generator();
+        GeneratorService gen = new GeneratorService();
+        UUID id = null;
+        try {
+
+            List<String> cmdOption = new LinkedList<>();
+            cmdOption.add("-XX:+UseConcMarkSweepGC");
+            id = gen.startTestApp("8282", "", "Test", cmdOption);
+            String output = gen.getProcessOutput(id);
+            assertThat(output, is(equalTo("Hello World")));
+        } finally {
+            if (id != null) {
+                gen.stopTestApp(id);
+            }
+        }
+    }
+
+    @Test
+    public void testJMXQueryRunnerConcMarkSweepGCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
+        createTmpClassMainClass();
+        GeneratorService gen = new GeneratorService();
         List<String> cmdOption = new LinkedList<>();
         cmdOption.add("-XX:+UseConcMarkSweepGC");
-        Process proc = gen.startTestApp("8181", "", "Test", cmdOption);
-        BufferedReader reader2 = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-        String output = reader2.readLine();
-        assertThat(output, is(equalTo("Hello World")));
-        gen.stopTestApp(proc);
+        UUID procId = null;
+        try {
+
+            procId = gen.startTestApp("8282", "", "Test", cmdOption);
+            JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
+
+            //runner.init();
+            assertThat(runner.getOldGenCollector(), is(notNullValue()));
+            assertThat(runner.getYoungGenCollector(), is(notNullValue()));
+            assertThat(runner.getEdenSpace(), is(notNullValue()));
+            assertThat(runner.getPermGenSpace(), is(notNullValue()));
+            assertThat(runner.getSurvivorSpace(), is(notNullValue()));
+            assertThat(runner.getOldGenSpace(), is(notNullValue()));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEUSED).longValue(),
+                    is(Matchers.greaterThanOrEqualTo(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+        } finally {
+            if (procId != null) {
+                gen.stopTestApp(procId);
+            }
+        }
     }
 
     @Test
-    public void testJMXQueryRunnerConcMarkSweepGC() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
+    public void testJMXQueryRunnerSerialGCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
         createTmpClassMainClass();
-        Generator gen = new Generator();
-        List<String> cmdOption = new LinkedList<>();
-        cmdOption.add("-XX:+UseConcMarkSweepGC");
-        Process proc = gen.startTestApp("8181", "", "Test", cmdOption);
-        JMXQueryRunner runner = new JMXQueryRunner("8181");
-        
-        runner.init();
+        GeneratorService gen = new GeneratorService();
+        UUID procId = null;
+        try {
+            List<String> cmdOption = new LinkedList<>();
+            cmdOption.add("-XX:+UseSerialGC");
+            procId = gen.startTestApp("8282", "", "Test", cmdOption);
+            JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
-        assertThat(runner.getOldGenCollector(), is(notNullValue()));
-        assertThat(runner.getYoungGenCollector(), is(notNullValue()));
-        assertThat(runner.getEdenSpace(), is(notNullValue()));
-        assertThat(runner.getPermGen(), is(notNullValue()));
-        assertThat(runner.getSurvivorSpace(), is(notNullValue()));
-        assertThat(runner.getOldGen(), is(notNullValue()));
-        
-        gen.stopTestApp(proc);
+            //runner.init();
+            assertThat(runner.getOldGenCollector(), is(notNullValue()));
+            assertThat(runner.getYoungGenCollector(), is(notNullValue()));
+            assertThat(runner.getEdenSpace(), is(notNullValue()));
+            assertThat(runner.getPermGenSpace(), is(notNullValue()));
+            assertThat(runner.getSurvivorSpace(), is(notNullValue()));
+            assertThat(runner.getOldGenSpace(), is(notNullValue()));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEUSED).longValue(),
+                    is(greaterThanOrEqualTo(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+        } finally {
+            if (procId != null) {
+                gen.stopTestApp(procId);
+            }
+        }
     }
 
+    @Test
+    public void testJMXQueryRunnerParallelGCQuery() throws IOException, CannotCompileException,
+            NotFoundException, MalformedObjectNameException, IllegalStateException {
+        createTmpClassMainClass();
+        GeneratorService gen = new GeneratorService();
+        UUID procId = null;
+        try {
+
+            List<String> cmdOption = new LinkedList<>();
+            cmdOption.add("-XX:+UseParallelGC");
+            procId = gen.startTestApp("8282", "", "Test", cmdOption);
+            JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
+
+            //runner.init();
+            assertThat(runner.getOldGenCollector(), is(notNullValue()));
+            assertThat(runner.getYoungGenCollector(), is(notNullValue()));
+            assertThat(runner.getEdenSpace(), is(notNullValue()));
+            assertThat(runner.getPermGenSpace(), is(notNullValue()));
+            assertThat(runner.getSurvivorSpace(), is(notNullValue()));
+            assertThat(runner.getOldGenSpace(), is(notNullValue()));
+
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEUSED).longValue(),
+                    is(greaterThanOrEqualTo(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEFREE).longValue(),
+                    is(greaterThanOrEqualTo(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+        } finally {
+            if (procId != null) {
+                gen.stopTestApp(procId);
+            }
+        }
+    }
 
     @Test
-    public void testJMXQueryRunnerSerialGC() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
+    public void testJMXQueryRunnerG1GCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
         createTmpClassMainClass();
-        Generator gen = new Generator();
-        List<String> cmdOption = new LinkedList<>();
-        cmdOption.add("-XX:+UseSerialGC");
-        Process proc = gen.startTestApp("8181", "", "Test", cmdOption);
-        JMXQueryRunner runner = new JMXQueryRunner("8181");
-        
-        runner.init();
+        GeneratorService gen = new GeneratorService();
+        UUID procId = null;
+        try {
+            List<String> cmdOption = new LinkedList<>();
+            cmdOption.add("-XX:+UseG1GC");
+            procId = gen.startTestApp("8282", "", "Test", cmdOption);
+            JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
-        assertThat(runner.getOldGenCollector(), is(notNullValue()));
-        assertThat(runner.getYoungGenCollector(), is(notNullValue()));
-        assertThat(runner.getEdenSpace(), is(notNullValue()));
-        assertThat(runner.getPermGen(), is(notNullValue()));
-        assertThat(runner.getSurvivorSpace(), is(notNullValue()));
-        assertThat(runner.getOldGen(), is(notNullValue()));
-        
-        gen.stopTestApp(proc);
-    }    
+            //runner.init();
+            assertThat(runner.getOldGenCollector(), is(notNullValue()));
+            assertThat(runner.getYoungGenCollector(), is(notNullValue()));
+            assertThat(runner.getEdenSpace(), is(notNullValue()));
+            assertThat(runner.getPermGenSpace(), is(notNullValue()));
+            assertThat(runner.getSurvivorSpace(), is(notNullValue()));
+            assertThat(runner.getOldGenSpace(), is(notNullValue()));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.EDENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
 
-    @Test
-    public void testJMXQueryRunnerParallelGC() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
-        createTmpClassMainClass();
-        Generator gen = new Generator();
-        List<String> cmdOption = new LinkedList<>();
-        cmdOption.add("-XX:+UseParallelGC");
-        Process proc = gen.startTestApp("8181", "", "Test", cmdOption);
-        JMXQueryRunner runner = new JMXQueryRunner("8181");
-        
-        runner.init();
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
 
-        assertThat(runner.getOldGenCollector(), is(notNullValue()));
-        assertThat(runner.getYoungGenCollector(), is(notNullValue()));
-        assertThat(runner.getEdenSpace(), is(notNullValue()));
-        assertThat(runner.getPermGen(), is(notNullValue()));
-        assertThat(runner.getSurvivorSpace(), is(notNullValue()));
-        assertThat(runner.getOldGen(), is(notNullValue()));
-        
-        gen.stopTestApp(proc);
-    }       
-    
-    @Test
-    public void testJMXQueryRunnerG1GC() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
-        createTmpClassMainClass();
-        Generator gen = new Generator();
-        List<String> cmdOption = new LinkedList<>();
-        cmdOption.add("-XX:+UseG1GC");
-        Process proc = gen.startTestApp("8181", "", "Test", cmdOption);
-        JMXQueryRunner runner = new JMXQueryRunner("8181");
-        
-        runner.init();
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
 
-        assertThat(runner.getOldGenCollector(), is(notNullValue()));
-        assertThat(runner.getYoungGenCollector(), is(notNullValue()));
-        assertThat(runner.getEdenSpace(), is(notNullValue()));
-        assertThat(runner.getPermGen(), is(notNullValue()));
-        assertThat(runner.getSurvivorSpace(), is(notNullValue()));
-        assertThat(runner.getOldGen(), is(notNullValue()));
-        
-        gen.stopTestApp(proc);
-    }    
-    
-    
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEUSED).longValue(),
+                    is(greaterThanOrEqualTo(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEFREE).longValue(),
+                    is(greaterThanOrEqualTo(0L)));
+            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+        } finally {
+            if (procId != null) {
+                gen.stopTestApp(procId);
+            }
+        }
+    }
+
     private void createTmpClassMainClass() throws CannotCompileException, NotFoundException, IOException {
         ClassPool cpool = ClassPool.getDefault();
         CtClass tmpClass;
@@ -208,16 +380,19 @@ public class GCGeneratorTest {
             }
             CtConstructor defaultConstructor = CtNewConstructor.defaultConstructor(tmpClass);
             tmpClass.addConstructor(defaultConstructor);
-            CtMethod main = CtNewMethod.make("public static void main(String []args){"
-                    + "System.out.println(\"Hello World\");"
+            String str = "public static void main(String []args){"
                     + "Test test = new Test();"
-                    + "synchronized(test){"
-                    + "     test.wait();"
+                    + "Byte[]bigArr = new Byte[100000000];"
+                    + "Byte[]arr = new Byte[1000];"
+                    + "System.out.println(\"Hello World\");"
+                    + "try {"
+                    + "    Thread.sleep(1000L);"
+                    + "} catch (InterruptedException ex1) {"
                     + "}"
-                    + "}", tmpClass);
+                    + "}";
+            CtMethod main = CtNewMethod.make(str, tmpClass);
             tmpClass.addMethod(main);
             tmpClass.writeFile();
         }
     }
-
 }

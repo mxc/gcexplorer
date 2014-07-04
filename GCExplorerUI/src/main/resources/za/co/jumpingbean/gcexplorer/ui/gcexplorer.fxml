@@ -1,48 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.*?>
-<?import java.util.*?>
 <?import javafx.geometry.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
-<BorderPane  id="mainLayout" fx:id="mainLayout" prefHeight="600.0" prefWidth="800.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="za.co.jumpingbean.gcexplorer.ui.Main">
-  <top>
-    <HBox fx:id="controlTab" prefHeight="100.0" prefWidth="200.0" AnchorPane.bottomAnchor="400.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-      <children>
-        <Button fx:id="btnLaunch" mnemonicParsing="false" onAction="#launchProcess" text="Launch Process" />
-        <GridPane fx:id="jvmOptions" alignment="CENTER" prefHeight="200.0" prefWidth="676.0">
-          <children>
-            <Label text="Garbage Collector" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-            <VBox prefHeight="200.0" prefWidth="100.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-              <children>
-                <RadioButton fx:id="rdbSerial" mnemonicParsing="false" selected="true" text="Serial GC">
-                  <toggleGroup>
-                    <ToggleGroup fx:id="garbageCollectorGroup" />
-                  </toggleGroup>
-                </RadioButton>
-                <RadioButton fx:id="rdbParallel" mnemonicParsing="false" text="Parallel GC" toggleGroup="$garbageCollectorGroup" />
-                <RadioButton fx:id="rdbConcMarkSweep" mnemonicParsing="false" text="Conc Mark Sweep GC" toggleGroup="$garbageCollectorGroup" />
-                <RadioButton fx:id="rdbG1" mnemonicParsing="false" text="G1 GC" toggleGroup="$garbageCollectorGroup" />
-              </children>
-            </VBox>
-          </children>
-          <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" maxWidth="143.0" minWidth="10.0" prefWidth="143.0" />
-            <ColumnConstraints hgrow="SOMETIMES" maxWidth="101.0" minWidth="10.0" prefWidth="57.0" />
-          </columnConstraints>
-          <padding>
-            <Insets left="50.0" />
-          </padding>
-          <rowConstraints>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          </rowConstraints>
-        </GridPane>
-      </children>
-    </HBox>
-  </top>
+<BorderPane id="mainLayout" fx:id="mainLayout" prefHeight="600.0" prefWidth="800.0" stylesheets="@explorer.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<top>
+        <VBox prefHeight="150.0" prefWidth="302.0" BorderPane.alignment="CENTER">
+            <children><MenuBar>
+  <menus>
+    <Menu mnemonicParsing="false" text="File">
+      <items><MenuItem fx:id="mnuNewProcess" mnemonicParsing="false" text="New Process" />
+        <MenuItem mnemonicParsing="false" text="Close" />
+      </items>
+    </Menu>
+    <Menu mnemonicParsing="false" text="Help">
+      <items>
+        <MenuItem mnemonicParsing="false" text="About" />
+      </items>
+    </Menu>
+  </menus>
+</MenuBar>
+                <HBox prefHeight="100.0" prefWidth="200.0">
+                    <children><Label text="Units of Measure:">
+<padding>
+<Insets right="10.0" />
+</padding></Label>
+                        <RadioButton fx:id="rdbGB" mnemonicParsing="false" text="GB">
+                            <toggleGroup>
+                                <ToggleGroup fx:id="unitGroup" />
+                            </toggleGroup>
+                        </RadioButton>
+                        <RadioButton fx:id="rdbMB" mnemonicParsing="false" text="MB" toggleGroup="$unitGroup" />
+                        <RadioButton fx:id="rdbKB" mnemonicParsing="false" text="KB" toggleGroup="$unitGroup" />
+                        <RadioButton fx:id="rdbB" mnemonicParsing="false" selected="true" text="B" toggleGroup="$unitGroup" />
+                    </children>
+<padding>
+<Insets bottom="10.0" left="10.0" top="10.0" />
+</padding>
+                </HBox>
+                <TableView id="tblDetail" fx:id="tblDetails" prefHeight="235.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+                    <columns>
+                        <TableColumn fx:id="tcDescription" editable="false" prefWidth="110.0" text="Description" />
+                        <TableColumn id="measure" fx:id="tcCommitted" minWidth="0.0" prefWidth="91.0" text="Committed" /><TableColumn fx:id="tcUsed" prefWidth="60.0" text="Used" /><TableColumn fx:id="tcFree" prefWidth="79.0" text="Free" /><TableColumn fx:id="tcMax" prefWidth="91.0" text="Max" />
+                    </columns>
+                </TableView>
+            </children>
+        </VBox>
+</top>
+<center><TabPane fx:id="tabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER" />
+</center>
 </BorderPane>
