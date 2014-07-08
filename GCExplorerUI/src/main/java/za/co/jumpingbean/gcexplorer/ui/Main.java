@@ -17,8 +17,8 @@ import javafx.stage.Stage;
  */
 public class Main extends Application {
 
-    private GUIStatsCollectorController processController;
-    private Units units = Units.B;
+    private ProcessController processController;
+    private Units units = Units.MB;
     
     public static void main(String[] args) {
         launch(Main.class, args);
@@ -34,12 +34,14 @@ public class Main extends Application {
   
     @Override
     public void start(Stage primaryStage) throws Exception {
-        processController = new GUIStatsCollectorController(this);
+        processController = new ProcessController(this);
         Thread controllerThread = new Thread(processController, "GUI Stats Updater Controller");
+        controllerThread.setDaemon(true);
+        controllerThread.setName("GUI Process Controller");
         controllerThread.start();
 
         FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("gcexplorer.fxml")
+                getClass().getResource("mainForm.fxml")
         );
 
         loader.setController(new MainForm(processController,this));
@@ -55,7 +57,7 @@ public class Main extends Application {
         processController.stopAllProcesses();
     }
 
-    public GUIStatsCollectorController getProcessController() {
+    public ProcessController getProcessController() {
         return this.processController;
     }
 

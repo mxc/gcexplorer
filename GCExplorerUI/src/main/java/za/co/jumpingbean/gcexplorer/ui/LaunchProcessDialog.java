@@ -7,20 +7,24 @@ package za.co.jumpingbean.gcexplorer.ui;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 
 /**
@@ -45,6 +49,53 @@ public class LaunchProcessDialog implements Initializable {
     private RadioButton rdbParallel;
     @FXML
     private RadioButton rdbParallelOld;
+    @FXML
+    private RadioButton rdbUseAdaptiveSizePolicy;
+    @FXML
+    private RadioButton rdbUseCMSInitiatingOccupancyOnly;
+    @FXML
+    private TextField txtXms;
+    @FXML
+    private TextField txtXmx;
+    @FXML
+    private TextField txtNewSize;
+    @FXML
+    private TextField txtMaxNewSize;
+    @FXML
+    private TextField txtNewRatio;
+    @FXML
+    private TextField txtSurvivorRatio;
+    @FXML
+    private TextField txtPermSize;
+    @FXML
+    private TextField txtMaxPermSize;
+    @FXML
+    private TextField txtInitialTenuringThreshold;
+    @FXML
+    private TextField txtMaxTenuringThreshold;
+    @FXML
+    private TextField txtCMSInitiatingOccupancyFraction;
+    @FXML
+    private TextField txtConcGCThreads;
+    @FXML
+    private TextField txtParallelGCThreads;
+    @FXML
+    private TextField txtCMSTriggerRatio;
+    @FXML
+    private TextField txtCMSTriggerPermRatio;
+    @FXML
+    private TextField txtG1ReservePercent;
+    @FXML
+    private TextField txtG1HeapRegionSize;
+    @FXML
+    private TextField txtInitiatingHeapOccupancyPercent;
+    @FXML
+    private TextField txtParallelCMSThreads;
+    @FXML
+    private TextField txtMaxGCPauseMillis;
+    @FXML
+    private RadioButton rdbUseParNewGC;
+
     private final Main app;
     private final MainForm parent;
 
@@ -57,8 +108,15 @@ public class LaunchProcessDialog implements Initializable {
         //garbageCollectorGroup.getSelectedToggle();
         UUID procId;
         String selectedGC = (String) garbageCollectorGroup.getSelectedToggle().getUserData();
+        List<String> gcOptions;
         try {
-            procId = app.getProcessController().launchProcess(selectedGC);
+            gcOptions = getSelectedOptions();
+        } catch (IllegalStateException ex) {
+            return;
+        }
+        try {
+
+            procId = app.getProcessController().launchProcess(selectedGC, gcOptions);
         } catch (IOException |
                 IllegalStateException |
                 NullPointerException ex) {
@@ -78,13 +136,14 @@ public class LaunchProcessDialog implements Initializable {
         txtStatus.setText(strBuilder.toString());
 
         FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("processCharts.fxml")
+                getClass().getResource("processView.fxml")
         );
-        loader.setController(new ProcessViewForm(app, procId));
+        ProcessViewForm controller = new ProcessViewForm(app, procId);
+        loader.setController(controller);
         Parent pane;
         try {
             pane = loader.load();
-            this.parent.addTab(pane, procId);
+            this.parent.addTab(pane, procId, controller);
         } catch (IOException ex) {
             Logger.getLogger(LaunchProcessDialog.class.getName()).log(Level.SEVERE, null, ex);
             String txt = txtStatus.getText();
@@ -100,7 +159,283 @@ public class LaunchProcessDialog implements Initializable {
         this.rdbG1.setUserData("-XX:+UseG1GC");
         this.rdbParallel.setUserData("-XX:+UseParallelGC");
         this.rdbParallelOld.setUserData("-XX:+UseParallelOldGC");
+        this.rdbUseAdaptiveSizePolicy.setUserData("-XX:+UseAdaptiveSizePolicy");
+        this.rdbUseCMSInitiatingOccupancyOnly.setUserData("-XX:+UseCMSInitiatingOccupancyOnly");
+
+        this.rdbSerial.setOnAction(new EventHandler() {
+
+            @Override
+            public void handle(Event event) {
+                boolean disable = false;
+                if (rdbSerial.isSelected()) {
+                    disable = true;
+                }
+                setCMSOptionsState(disable);
+                setCommonCMSG1State(disable);
+                setG1OptionsState(disable);
+                setParallelGCOptionsState(disable);
+                setCommonParallelG1State(disable);
+            }
+
+        });
+
+        this.rdbConcMarkSweep.setOnAction(new EventHandler() {
+
+            @Override
+            public void handle(Event event) {
+                boolean disable = false;
+                if (rdbSerial.isSelected()) {
+                    disable = true;
+                }
+                setCMSOptionsState(!disable);
+                setCommonCMSG1State(!disable);
+                setG1OptionsState(disable);
+                setParallelGCOptionsState(disable);
+                setCommonParallelG1State(disable);
+            }
+
+        });
+
+        this.rdbG1.setOnAction(new EventHandler() {
+
+            @Override
+            public void handle(Event event) {
+                boolean disable = false;
+                if (rdbG1.isSelected()) {
+                    disable = true;
+                }
+                setCMSOptionsState(disable);
+                setCommonCMSG1State(!disable);
+                setG1OptionsState(!disable);
+                setParallelGCOptionsState(disable);
+                setCommonParallelG1State(!disable);
+            }
+        });
+
+        this.rdbParallel.setOnAction(new EventHandler() {
+
+            @Override
+            public void handle(Event event) {
+                boolean disable = false;
+                if (rdbParallel.isSelected()) {
+                    disable = true;
+                }
+                setCMSOptionsState(disable);
+                setCommonCMSG1State(disable);
+                setG1OptionsState(disable);
+                setParallelGCOptionsState(!disable);
+                setCommonParallelG1State(!disable);
+            }
+
+        });
+
+        this.rdbParallelOld.setOnAction(new EventHandler() {
+
+            @Override
+            public void handle(Event event) {
+                boolean disable = false;
+                if (rdbParallelOld.isSelected()) {
+                    disable = true;
+                }
+                setCMSOptionsState(disable);
+                setCommonCMSG1State(disable);
+                setG1OptionsState(disable);
+                setParallelGCOptionsState(!disable);
+
+            }
+
+        });
+
         this.btnLaunch.setOnAction(this::launchProcess);
+    }
+
+    private void setCMSOptionsState(boolean state) {
+        rdbUseCMSInitiatingOccupancyOnly.disableProperty().set(state);
+        txtCMSInitiatingOccupancyFraction.disableProperty().set(state);
+        txtCMSTriggerPermRatio.disableProperty().set(state);
+        txtCMSTriggerRatio.disableProperty().set(state);
+        rdbUseParNewGC.disableProperty().set(state);
+        txtParallelCMSThreads.disableProperty().set(state);
+    }
+
+    private void setParallelGCOptionsState(boolean state) {
+        this.rdbUseAdaptiveSizePolicy.disableProperty().set(state);
+        this.txtMaxGCPauseMillis.disableProperty().set(state);
+        txtParallelGCThreads.disableProperty().set(state);
+    }
+
+    private void setCommonCMSG1State(boolean state) {
+        txtConcGCThreads.disableProperty().set(state);
+    }
+
+    private void setCommonParallelG1State(boolean state) {
+        txtParallelGCThreads.disableProperty().set(state);
+    }
+
+    private void setG1OptionsState(boolean state) {
+        txtG1HeapRegionSize.disableProperty().set(state);
+        txtG1ReservePercent.disableProperty().set(state);
+        txtInitiatingHeapOccupancyPercent.disableProperty().set(state);
+    }
+
+    private List<String> getSelectedOptions() {
+        ArrayList<String> list = new ArrayList<>();
+        StringBuilder errorMsg = new StringBuilder();
+
+        this.addTextFieldOptionBetween(txtCMSInitiatingOccupancyFraction, "-XX:CMSInitiatingOccupancyFraction="
+                + txtCMSInitiatingOccupancyFraction.getText(), "CMSInitiatingOccupancyFraction", 0, 100, list, errorMsg);
+
+        this.addTextFieldOption(txtCMSTriggerPermRatio, "-XX:CMSTriggerPermRatio="
+                + txtCMSTriggerPermRatio.getText(), "CMSTriggerPermRatio", list, errorMsg);
+
+        this.addTextFieldOption(txtCMSTriggerRatio, "-XX:CMSTriggerRatio="
+                + txtCMSTriggerPermRatio.getText(), "CMSTriggerRatio", list, errorMsg);
+
+        this.addTextFieldOption(txtConcGCThreads, "-XX:ConcGCThreads="
+                + txtConcGCThreads.getText(), "ConcGCThreads", list, errorMsg);
+
+        this.addTextFieldOption(txtG1HeapRegionSize, "-XX:G1HeapRegionSize="
+                + txtG1HeapRegionSize.getText(), "G1HeapRegionSize", list, errorMsg);
+
+        this.addTextFieldOptionBetween(txtG1ReservePercent, "-XX:G1ReservePercent="
+                + txtG1ReservePercent.getText(), "G1ReservePercent=", 0, 100, list, errorMsg);
+
+        this.addTextFieldOption(txtInitialTenuringThreshold, "-XX:InitialTenuringThreshold="
+                + txtInitialTenuringThreshold.getText(), "InitialTenuringThreshold", list, errorMsg);
+
+        this.addTextFieldOption(txtInitiatingHeapOccupancyPercent, "-XX:InitiatingHeapOccupancyPercent="
+                + txtInitiatingHeapOccupancyPercent.getText(), "InitiatingHeapOccupancyPercent", list, errorMsg);
+
+        this.addTextFieldOption(txtMaxGCPauseMillis, "-XX:MaxGCPauseMillis="
+                + txtMaxGCPauseMillis.getText(), "MaxGCPauseMillis", list, errorMsg);
+
+        this.addTextFieldOption(txtMaxNewSize, "-XX:MaxNewSize="
+                + txtMaxNewSize.getText() + "m", "MaxNewSize", list, errorMsg);
+
+        this.addTextFieldOption(txtMaxPermSize, "-XX:MaxNewSize="
+                + txtMaxPermSize.getText() + "m", "MaxPermSize", list, errorMsg);
+
+        this.addTextFieldOptionBetween(txtMaxTenuringThreshold, "-XX:MaxTenuringThreshold="
+                + txtMaxTenuringThreshold.getText(), "MaxTenuringThreshold", 0, 15, list, errorMsg);
+
+        this.addTextFieldOption(txtNewRatio, "-XX:NewRatio="
+                + txtNewRatio.getText(), "-XX:NewRatio=", list, errorMsg);
+
+        this.addTextFieldOption(txtNewSize, "-XX:NewSize="
+                + txtNewSize.getText() + "m", "-XX:NewSize=", list, errorMsg);
+
+        this.addTextFieldOption(txtParallelCMSThreads, "-XX:ParallelCMSThreads="
+                + txtParallelCMSThreads.getText(), "-XX:ParallelCMSThreads=", list, errorMsg);
+
+        this.addTextFieldOption(txtParallelGCThreads, "-XX:ParallelGCThreads="
+                + txtParallelGCThreads.getText(), "-XX:ParallelGCThreads=", list, errorMsg);
+
+        this.addTextFieldOption(txtPermSize, "-XX:PermSize="
+                + txtPermSize.getText() + "m", "-XX:PermSize==", list, errorMsg);
+
+        this.addTextFieldOption(txtSurvivorRatio, "-XX:SurvivorRatio="
+                + txtSurvivorRatio.getText(), "-XX:SurvivorRatio=", list, errorMsg);
+
+        int xms = -1;
+        if (!txtXms.isDisabled()
+                && !txtXms.getText().isEmpty()) {
+            if (isNumber(txtXms.getText())) {
+                xms = getNumber(txtXms.getText());
+                list.add("-Xms" + txtXms.getText() + "m");
+            } else {
+                errorMsg.append("-Xms must be a number\n\r");
+            }
+        }
+
+        int xmx = -1;
+        if (!txtXmx.isDisabled()
+                && !txtXmx.getText().isEmpty()) {
+            if (isNumber(txtXmx.getText())) {
+                xmx = Integer.parseInt(txtXmx.getText());
+                list.add("-Xmx" + txtXmx.getText() + "m");
+            } else {
+                errorMsg.append("-Xmx must be a number\n\r");
+            }
+        }
+
+        if (xms != -1 && xmx != -1 && xms > xmx) {
+            errorMsg.append("-Xms cannot be greater than -Xmx");
+        }
+
+        if (!rdbUseAdaptiveSizePolicy.isDisabled() && rdbUseAdaptiveSizePolicy.isSelected()) {
+            list.add("-XX:+UseAdaptiveSizePolicy");
+        }
+        if (!rdbUseCMSInitiatingOccupancyOnly.isDisabled() && rdbUseCMSInitiatingOccupancyOnly.isSelected()) {
+            list.add("-XX:+UseCMSInitiatingOccupancyOnly");
+        }
+        if (!rdbUseParNewGC.isDisabled() && rdbUseParNewGC.isSelected()) {
+            list.add("-XX:-UseParNewGC");
+        }
+        if (errorMsg.toString().isEmpty()) {
+            return list;
+        } else {
+            txtStatus.setText(errorMsg.toString());
+            throw new IllegalStateException("Invalid parameter inputs");
+        }
+    }
+
+    private void addTextFieldOption(TextField field, String param, String fieldLabel, List<String> list, StringBuilder errorMsg) {
+        if (!field.isDisabled()
+                && !field.getText().isEmpty()) {
+            if (isNumber(field.getText())) {
+                list.add(param);
+            } else {
+                errorMsg.append(fieldLabel).append(" must be a number\n\r");
+            }
+        }
+    }
+
+//    private void addTextFieldOptionGreaterThan(TextField field, String param, String fieldLabel, int maxVal,
+//            List<String> list, StringBuilder errorMsg) {
+//        if (!field.isDisabled()
+//                && !field.getText().isEmpty()) {
+//            if (isNumber(field.getText())) {
+//                int num = getNumber(field.getText());
+//                if (num < maxVal) {
+//                    list.add(param);
+//                }else{
+//                    errorMsg.append(fieldLabel).append(" must be less than ").append(maxVal).append("\n\r");
+//                }
+//            } else {
+//                errorMsg.append(fieldLabel).append(" must be a number\n\r");
+//            }
+//        }
+//    }
+    private void addTextFieldOptionBetween(TextField field, String param, String fieldLabel,
+            int minVal, int maxVal, List<String> list, StringBuilder errorMsg) {
+        if (!field.isDisabled()
+                && !field.getText().isEmpty()) {
+            if (isNumber(field.getText())) {
+                int num = getNumber(field.getText());
+                if (num < maxVal && num > minVal) {
+                    list.add(param);
+                } else {
+                    errorMsg.append(fieldLabel).append(" must be greater than ").
+                            append(minVal).append(" less than ").append(maxVal).append("\n\r");
+                }
+            } else {
+                errorMsg.append(fieldLabel).append(" must be a number\n\r");
+            }
+        }
+    }
+
+    private boolean isNumber(String text) {
+        try {
+            Integer.parseInt(text);
+            return true;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
+    private int getNumber(String text) {
+        int number = Integer.parseInt(text);
+        return number;
     }
 
 }

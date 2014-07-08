@@ -5,6 +5,7 @@
  */
 package za.co.jumpingbean.gc.service;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class ProcessParams {
     private String classPath;
     private String mainClass;
     private List<String> gcOptions;
+    private List<String> filterOptions;
 
     public ProcessParams(String port, String classPath, String mainClass) {
         checkNullEmptyString(port);
@@ -102,6 +104,14 @@ public class ProcessParams {
         } else {
             throw new IllegalArgumentException("port must be a valid number between 1024 and 65535");
         }
+    }
+
+    public String getStartupParameters(){
+        StringBuilder str = new StringBuilder("System Info:\n\r");
+        for (String tmpString : gcOptions){
+            str.append(tmpString).append("\n\r");
+        }
+        return str.toString();
     }
 
 }

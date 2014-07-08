@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane hgap="10.0" prefHeight="186.0" prefWidth="445.0" vgap="10.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <columnConstraints>
+        <ColumnConstraints />
+        <ColumnConstraints />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints />
+        <RowConstraints />
+        <RowConstraints />
+        <RowConstraints />
+        <RowConstraints />
+    </rowConstraints>
+    <children>
+        <Label text="Number of instances" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <TextField fx:id="txtNumInstances" prefHeight="25.0" prefWidth="194.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+        <Label text="Instance size in MB" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <TextField fx:id="txtInstanceSize" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Label text="Object creation pause in millisec" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <TextField fx:id="txtCreationPauseTime" prefHeight="25.0" prefWidth="194.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <Label text="Return delay in millisec" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <TextField fx:id="txtReturnDelay" GridPane.columnIndex="1" GridPane.rowIndex="3" />        
+        <Button fx:id="btnGenLocalInstances" alignment="CENTER" mnemonicParsing="false" prefHeight="25.0" prefWidth="195.0" text="Create local objects" GridPane.columnIndex="1" GridPane.rowIndex="4" /><Button fx:id="btnGenLongLivedInstances" alignment="CENTER" mnemonicParsing="false" text="Create long lived objects" GridPane.rowIndex="4" />
+    </children>
+<opaqueInsets>
+<Insets />
+</opaqueInsets>
+<padding>
+<Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+</padding>
+</GridPane>

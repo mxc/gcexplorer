@@ -11,13 +11,20 @@ package za.co.jumpingbean.gcexplorer.ui;
  * @author mark
  */
 public enum Units {
-    GB((int) Math.pow(1024,3)),MB((int) Math.pow(1024,2)),KB(1024),B(1);
+    GB((int) Math.pow(1024,3),"GigaBytes"),MB((int) Math.pow(1024,2),"MegaBytes"),KB(1024,"KiloBytes"),B(1,"Bytes");
     
     private final int conversionUnits;
+    private final String name;
     
-    Units(int conversionUnits){
+    Units(int conversionUnits,String name){
             this.conversionUnits=conversionUnits;
+            this.name=name;
     }
+
+    public String getName() {
+        return name;
+    }
+    
     
     public int getConversionUnits(){
         return this.conversionUnits;

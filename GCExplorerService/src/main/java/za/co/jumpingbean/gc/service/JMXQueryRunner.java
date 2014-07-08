@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Set;
+import javax.management.JMX;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -23,6 +25,7 @@ import za.co.jumpingbean.gc.service.constants.OldGenerationSpace;
 import za.co.jumpingbean.gc.service.constants.PermGen;
 import za.co.jumpingbean.gc.service.constants.SurvivorSpace;
 import za.co.jumpingbean.gc.service.constants.YoungGenerationCollector;
+import za.co.jumpingbean.gc.testApp.jmx.GCGeneratorMBean;
 
 /**
  *
@@ -37,6 +40,7 @@ public class JMXQueryRunner {
     private MemoryPoolMXBean survivorSpace;
     private MemoryPoolMXBean permGenSpace;
     private MemoryPoolMXBean oldGenSpace;
+    private GCGeneratorMBean garbageGenerator;
 
     private JMXQueryRunner(String port) throws IOException {
         HashMap<String, String> map = new HashMap<>();
@@ -70,6 +74,7 @@ public class JMXQueryRunner {
         try {
             this.getCollectors();
             this.getMemoryPools();
+            this.getGCGeneratorBean();
         } catch (IOException | MalformedObjectNameException ex) {
             throw new IllegalStateException("error initialising gc and memory pool mbeans");
         }
@@ -110,13 +115,18 @@ public class JMXQueryRunner {
                 this.permGenSpace = bean;
             } else if (OldGenerationSpace.isMember(bean.getName())) {
                 this.oldGenSpace = bean;
-            } else if (bean.getName().equals("Compressed Class Space")||
-                   bean.getName().equals("Code Cache")){
-                    //Not mapped yet, from G1 collector
-            }else {
+            } else if (bean.getName().equals("Compressed Class Space")
+                    || bean.getName().equals("Code Cache")) {
+                //Not mapped yet, from G1 collector
+            } else {
                 throw new IllegalStateException("Memory pool not found " + bean.getName());
             }
         }
+    }
+
+    private void getGCGeneratorBean() throws IOException, MalformedObjectNameException {
+        ObjectName objName = new ObjectName("JumpingBean:name=GCGenerator");
+        garbageGenerator = JMX.newMBeanProxy(server, objName, GCGeneratorMBean.class);
     }
 
     public GarbageCollectorMXBean getOldGenCollector() {
@@ -143,4 +153,18 @@ public class JMXQueryRunner {
         return oldGenSpace;
     }
 
+    public GCGeneratorMBean getGCGenerator(){
+        return this.garbageGenerator;
+    }
+
+    public String getGCInfo() {
+        DecimalFormat df = new DecimalFormat("#,###,##0.000");
+        StringBuilder str = new StringBuilder("Young GCs: Count ");
+        str.append(youngGenCollector.getCollectionCount()).append("  ");
+        str.append("Time ").append(df.format((double)youngGenCollector.getCollectionTime()/1000d));
+        str.append("  |  ");
+        str.append("Old Gen GCs: Count").append(oldGenCollector.getCollectionCount()).append("   ");
+        str.append("Time ").append(df.format((double)oldGenCollector.getCollectionTime()/1000d));
+        return str.toString();
+    }
 }

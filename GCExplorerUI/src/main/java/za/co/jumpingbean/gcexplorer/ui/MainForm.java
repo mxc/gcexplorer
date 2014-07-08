@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -25,16 +26,21 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Callback;
+import za.co.jumpingbean.gcexplorer.model.MemoryPool;
+import za.co.jumpingbean.gcexplorer.model.OldGenMemoryPool;
+import za.co.jumpingbean.gcexplorer.model.PermGenMemoryPool;
+import za.co.jumpingbean.gcexplorer.model.SurvivorMemoryPool;
 import za.co.jumpingbean.gcexplorer.model.UUIDProcess;
 
 /**
@@ -50,34 +56,68 @@ public class MainForm implements Initializable {
     @FXML
     private ToggleGroup unitGroup;
     @FXML
-    private TableColumn<UUIDProcess, Number> tcCommitted;
+    private TableColumn<UUIDProcess, Number> tcEdenCommitted;
     @FXML
-    private TableColumn<UUIDProcess, Number> tcUsed;
+    private TableColumn<UUIDProcess, Number> tcEdenUsed;
     @FXML
-    private TableColumn<UUIDProcess, Number> tcMax;
+    private TableColumn<UUIDProcess, Number> tcEdenMax;
     @FXML
-    private TableColumn<UUIDProcess, Number> tcFree;
+    private TableColumn<UUIDProcess, Number> tcEdenFree;
+
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcSurvivorCommitted;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcSurvivorUsed;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcSurvivorMax;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcSurvivorFree;
+    
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcOldGenCommitted;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcOldGenUsed;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcOldGenMax;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcOldGenFree;
+
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcPermGenCommitted;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcPermGenUsed;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcPermGenMax;
+    @FXML
+    private TableColumn<UUIDProcess, Number> tcPermGenFree;    
+    
     @FXML
     private TableColumn<UUIDProcess, String> tcDescription;
     @FXML
-    private RadioButton rdbGB;
+    private RadioMenuItem rdbGB;
     @FXML
-    private RadioButton rdbKB;
+    private RadioMenuItem rdbKB;
     @FXML
-    private RadioButton rdbMB;
+    private RadioMenuItem rdbMB;
     @FXML
-    private RadioButton rdbB;
+    private RadioMenuItem rdbB;
     @FXML
     private TabPane tabPane;
 
     private final Main app;
+    
+    private ObservableList<UUIDProcess> processData= FXCollections.observableArrayList(new ArrayList<>());
 
-    MainForm(GUIStatsCollectorController statsCollector, Main app) {
+    MainForm(ProcessController statsCollector, Main app) {
         this.app = app;
     }
 
     protected void changeUnits(ActionEvent e) {
-        app.setUnits((Units) this.unitGroup.getSelectedToggle().getUserData());
+        Units unit = (Units) this.unitGroup.getSelectedToggle().getUserData();
+        app.setUnits(unit);
+        for (Tab tab : tabPane.getTabs()){
+            ((ProcessViewForm)tab.getUserData()).updateYAxii(unit);
+        }
     }
 
     protected void newProcess(ActionEvent e) {
@@ -91,8 +131,8 @@ public class MainForm implements Initializable {
             stage.setScene(new Scene(pane));
             stage.setTitle("Start New Process");
             stage.initModality(Modality.WINDOW_MODAL);
-//            stage.initOwner(
-//                    ((MenuItem) e.getSource()).getScene().getWindow());
+            stage.initOwner(this.tblDetails.getParent().getScene().getWindow());
+            stage.initStyle(StageStyle.UTILITY);
             stage.show();
         } catch (IOException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
@@ -113,58 +153,72 @@ public class MainForm implements Initializable {
         this.rdbGB.setUserData(Units.GB);
 
         tcDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
+        this.setColumns(EdenMemoryPool.class, tcEdenCommitted, tcEdenFree, tcEdenUsed, tcEdenMax);
+        this.setColumns(SurvivorMemoryPool.class, tcSurvivorCommitted, tcSurvivorFree, tcSurvivorUsed, tcSurvivorMax);
+        this.setColumns(OldGenMemoryPool.class, tcOldGenCommitted, tcOldGenFree, tcOldGenUsed, tcOldGenMax);
+        this.setColumns(PermGenMemoryPool.class, tcPermGenCommitted, tcPermGenFree, tcPermGenUsed, tcPermGenMax);
 
-        tcCommitted.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<UUIDProcess, Number>, ObservableValue<Number>>() {
-
-            @Override
-            public ObservableValue<Number> call(TableColumn.CellDataFeatures<UUIDProcess, Number> param) {
-                return param.getValue().getEdenPool().getCommitted().measureProperty();
-            }
-        });
-        tcCommitted.setCellFactory(new CellNumberFormatter(app));
-
-        tcUsed.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<UUIDProcess, Number>, ObservableValue<Number>>() {
-
-            @Override
-            public ObservableValue<Number> call(TableColumn.CellDataFeatures<UUIDProcess, Number> param) {
-                return param.getValue().getEdenPool().getUsed().measureProperty();
-            }
-        });
-        tcUsed.setCellFactory(new CellNumberFormatter(app));
-
-        tcFree.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<UUIDProcess, Number>, ObservableValue<Number>>() {
-
-            @Override
-            public ObservableValue<Number> call(TableColumn.CellDataFeatures<UUIDProcess, Number> param) {
-                return param.getValue().getEdenPool().getFree().measureProperty();
-            }
-        });
-        tcFree.setCellFactory(new CellNumberFormatter(app));
-
-        tcMax.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<UUIDProcess, Number>, ObservableValue<Number>>() {
-
-            @Override
-            public ObservableValue<Number> call(TableColumn.CellDataFeatures<UUIDProcess, Number> param) {
-                return param.getValue().getEdenPool().getMax().measureProperty();
-            }
-        });
-        tcMax.setCellFactory(new CellNumberFormatter(app));
-        tblDetails.setItems(FXCollections.observableList(new ArrayList(app.getProcessController().getDataItems())));
+        tblDetails.setItems(processData);
     }
 
-    void addTab(Parent pane,UUID procId) {
+    private void setColumns(Class<? extends MemoryPool> pool, TableColumn committed,TableColumn free, TableColumn used,TableColumn max){
+        committed.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<UUIDProcess, Number>, ObservableValue<Number>>() {
+
+            @Override
+            public ObservableValue<Number> call(TableColumn.CellDataFeatures<UUIDProcess, Number> param) {
+                return param.getValue().getPool(pool).getCommitted().measureProperty();
+            }
+        });
+        committed.setCellFactory(new CellNumberFormatter(app));
+
+        used.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<UUIDProcess, Number>, ObservableValue<Number>>() {
+
+            @Override
+            public ObservableValue<Number> call(TableColumn.CellDataFeatures<UUIDProcess, Number> param) {
+                return param.getValue().getPool(pool).getUsed().measureProperty();
+            }
+        });
+        used.setCellFactory(new CellNumberFormatter(app));
+
+        free.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<UUIDProcess, Number>, ObservableValue<Number>>() {
+
+            @Override
+            public ObservableValue<Number> call(TableColumn.CellDataFeatures<UUIDProcess, Number> param) {
+                return param.getValue().getPool(pool).getFree().measureProperty();
+            }
+        });
+        free.setCellFactory(new CellNumberFormatter(app));
+
+        max.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<UUIDProcess, Number>, ObservableValue<Number>>() {
+
+            @Override
+            public ObservableValue<Number> call(TableColumn.CellDataFeatures<UUIDProcess, Number> param) {
+                return param.getValue().getPool(pool).getMax().measureProperty();
+            }
+        });
+        max.setCellFactory(new CellNumberFormatter(app));
+        
+    }
+    
+    
+    void addTab(Parent pane,UUID procId,ProcessViewForm controller) {
         Tab tab = new Tab();
         tab.setUserData(procId);
+        tab.setUserData(controller);
         tab.setOnClosed(new EventHandler<Event>() {
 
             @Override
             public void handle(Event event) {
-                    app.getProcessController().stopProcess((UUID) ((Tab)event.getSource()).getUserData());
+                UUID id = (UUID) ((Tab)event.getSource()).getUserData();
+                processData.remove(app.getProcessController().getUUIDProcess(id));
+                app.getProcessController().stopProcess(id);
+                    
             }
         });
         tab.setText("Proc");
         tab.setContent(pane);
         tabPane.getTabs().add(tab);
+        this.processData.add(this.app.getProcessController().getUUIDProcess(procId));
     }
 
 }

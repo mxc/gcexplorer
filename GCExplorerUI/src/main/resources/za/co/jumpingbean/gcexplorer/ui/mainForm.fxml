@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane id="mainLayout" fx:id="mainLayout" prefHeight="600.0" prefWidth="800.0" stylesheets="@explorer.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <top>
+        <VBox prefHeight="135.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+            <children>
+                <MenuBar>
+                    <menus>
+                        <Menu mnemonicParsing="false" text="File">
+                            <items>
+                                <MenuItem fx:id="mnuNewProcess" mnemonicParsing="false" text="New Process" />
+                                <MenuItem mnemonicParsing="false" text="Close" />
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Units">
+                            <items>
+                                <RadioMenuItem fx:id="rdbGB" mnemonicParsing="false" text="GB">
+                                    <toggleGroup>
+                                        <ToggleGroup fx:id="unitGroup" />
+                                    </toggleGroup>
+                                </RadioMenuItem>
+                                <RadioMenuItem fx:id="rdbMB" mnemonicParsing="false" selected="true" text="MB" toggleGroup="$unitGroup" />
+                                <RadioMenuItem fx:id="rdbKB" mnemonicParsing="false" text="KB" toggleGroup="$unitGroup" />
+                                <RadioMenuItem fx:id="rdbB" mnemonicParsing="false" text="B" toggleGroup="$unitGroup" />                                
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Help">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="About" />
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+                <TableView id="tblDetail" fx:id="tblDetails" prefHeight="105.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+                    <columns>
+                        <TableColumn fx:id="tcDescription" editable="false" prefWidth="110.0" text="Description" />
+                        <TableColumn editable="false" prefWidth="75.0" text="Eden">
+                            <columns>
+                                <TableColumn id="measure" fx:id="tcEdenCommitted" editable="false" minWidth="0.0" prefWidth="91.0" styleClass="table-column,eden-column" text="Committed" />
+                                <TableColumn fx:id="tcEdenUsed" editable="false" prefWidth="60.0" styleClass="table-column,eden-column" text="Used" />
+                                <TableColumn fx:id="tcEdenFree" editable="false" prefWidth="79.0" styleClass="table-column,eden-colomn" text="Free" />
+                                <TableColumn fx:id="tcEdenMax" editable="false" prefWidth="91.0" styleClass="table-column,eden-column" text="Max" />
+                            </columns>
+                        </TableColumn>
+                        <TableColumn editable="false" prefWidth="75.0" text="Survivor">
+                            <columns>
+                                <TableColumn id="measure" fx:id="tcSurvivorCommitted" editable="false" minWidth="0.0" prefWidth="91.0" styleClass="table-column,eden-column" text="Committed" />
+                                <TableColumn fx:id="tcSurvivorUsed" editable="false" prefWidth="60.0" styleClass="table-column,eden-column" text="Used" />
+                                <TableColumn fx:id="tcSurvivorFree" editable="false" prefWidth="79.0" styleClass="table-column,eden-colomn" text="Free" />
+                                <TableColumn fx:id="tcSurvivorMax" editable="false" prefWidth="91.0" styleClass="table-column,eden-column" text="Max" />
+                            </columns>
+                        </TableColumn>
+                        <TableColumn editable="false" prefWidth="75.0" text="OldGen">
+                            <columns>
+                                <TableColumn id="measure" fx:id="tcOldGenCommitted" editable="false" minWidth="0.0" prefWidth="91.0" styleClass="table-column,eden-column" text="Committed" />
+                                <TableColumn fx:id="tcOldGenUsed" editable="false" prefWidth="60.0" styleClass="table-column,eden-column" text="Used" />
+                                <TableColumn fx:id="tcOldGenFree" editable="false" prefWidth="79.0" styleClass="table-column,eden-colomn" text="Free" />
+                                <TableColumn fx:id="tcOldGenMax" editable="false" prefWidth="91.0" styleClass="table-column,eden-column" text="Max" />
+                            </columns>
+                        </TableColumn>
+                        <TableColumn prefWidth="75.0" text="Perm Gen">
+                            <columns>
+                                <TableColumn id="measure" fx:id="tcPermGenCommitted" editable="false" minWidth="0.0" prefWidth="91.0" styleClass="table-column,eden-column" text="Committed" />
+                                <TableColumn fx:id="tcPermGenUsed" editable="false" prefWidth="60.0" styleClass="table-column,eden-column" text="Used" />
+                                <TableColumn fx:id="tcPermGenFree" editable="false" prefWidth="79.0" styleClass="table-column,eden-colomn" text="Free" />
+                                <TableColumn fx:id="tcPermGenMax" editable="false" prefWidth="91.0" styleClass="table-column,eden-column" text="Max" />
+                            </columns>
+                        </TableColumn>
+                                
+                    </columns>
+                </TableView>
+            </children>
+            <BorderPane.margin>
+                <Insets />
+            </BorderPane.margin>
+            <padding>
+                <Insets bottom="10.0" />
+            </padding>
+        </VBox>
+    </top>
+    <center>
+        <TabPane fx:id="tabPane" side="LEFT" BorderPane.alignment="CENTER" />
+    </center>
+</BorderPane>

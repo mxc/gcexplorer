@@ -36,7 +36,7 @@ public class ProcOutputReaderList extends ArrayList<String> {
         }
         this.proc = proc;
         this.reader = reader;
-        Arrays.fill(output,"");
+        Arrays.fill(output, "");
     }
 
     public void init() {
@@ -45,7 +45,7 @@ public class ProcOutputReaderList extends ArrayList<String> {
                 while (isRunning) {
                     if (proc.isAlive()) {
                         String str = reader.readLine();
-                        if(str!=null){
+                        if (str != null) {
                             ProcOutputReaderList.this.addString(str);
                         }
                     } else {
@@ -57,6 +57,7 @@ public class ProcOutputReaderList extends ArrayList<String> {
             }
         });
         thread.setName("Process output reader");
+        thread.setDaemon(true);
         thread.start();
     }
 
@@ -85,11 +86,6 @@ public class ProcOutputReaderList extends ArrayList<String> {
 
     void stop() {
         this.isRunning = false;
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(ProcOutputReaderList.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
 }

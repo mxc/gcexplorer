@@ -56,6 +56,7 @@ public class GarbageGeneratorApp {
             System.out.println("Generator started...");
             while (gen.isRunning()) {
                 try {
+                    System.out.println("waiting....");
                     gen.wait();
                 } catch (InterruptedException ex) {
                     Logger.getLogger(GarbageGeneratorApp.class.getName()).log(Level.SEVERE, null, ex);

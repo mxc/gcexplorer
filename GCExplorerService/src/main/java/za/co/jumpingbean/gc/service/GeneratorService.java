@@ -3,21 +3,27 @@ package za.co.jumpingbean.gc.service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.value.ChangeListener;
 import za.co.jumpingbean.gc.service.constants.DESC;
 
 public class GeneratorService {
 
     //Map<Process, ProcessParams> processes = new HashMap<>();
     //Map<Process,JMXQueryRunner> jmxConnections = new HashMap<>();
-    Map<UUID, ProcessObject> processes = new HashMap<>();
+    final Map<UUID, ProcessObject> processes = new HashMap<>();
+    ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    Lock wlock = rwLock.writeLock();
+    Lock rlock = rwLock.writeLock();
 
     public UUID startTestApp(String port, String classPath, String mainClass, List<String> gcOptions)
             throws IllegalStateException, IOException {
@@ -55,8 +61,12 @@ public class GeneratorService {
             if (proc.exitValue() != 0) {
                 BufferedReader error = new BufferedReader(new InputStreamReader(
                         proc.getErrorStream()));
-                String err = error.readLine();
-                throw new IllegalStateException("Error starting process: " + err);
+                StringBuilder str = new StringBuilder(error.readLine());
+                String tmp;
+                while ((tmp=error.readLine())!=null){
+                    str.append(tmp);
+                }
+                throw new IllegalStateException("Error starting process: " + str.toString());
             } else {
                 throw new IllegalStateException("Process terminate too early.");
             }
@@ -81,7 +91,12 @@ public class GeneratorService {
             try {
                 ProcessObject procObj = new ProcessObject(proc, params,
                         JMXQueryRunner.createJXMQueryRunner(params.getPort()), outputList);
-                processes.put(procObj.getId(), procObj);
+                try {
+                    wlock.lock();
+                    processes.put(procObj.getId(), procObj);
+                } finally {
+                    wlock.unlock();
+                }
                 return procObj.getId();
             } catch (IOException ex) {
                 outputList.stop();
@@ -95,93 +110,135 @@ public class GeneratorService {
     }
 
     public void stopTestApp(UUID id) {
-        processes.get(id).stop();
-        processes.remove(id);
+        try {
+            wlock.lock();
+            processes.get(id).stop();
+            processes.remove(id);
+        } finally {
+            wlock.unlock();
+        }
     }
 
     public void stopAllTestApps() {
-        for (UUID id : processes.keySet()) {
-            stopTestApp(id);
+        try {
+            wlock.lock();
+            for (UUID id : processes.keySet()) {
+                stopTestApp(id);
+            }
+        } finally {
+            wlock.unlock();
         }
     }
 
     public JMXQueryRunner getJMXQueryRunner(UUID id) {
-        return this.processes.get(id).getQry();
+        try {
+            rlock.lock();
+            return this.processes.get(id).getQry();
+        } finally {
+            rlock.unlock();
+        }
     }
 
     public ProcessParams getProcessParams(UUID id) {
-        return this.processes.get(id).getParams();
+        try {
+            rlock.lock();
+            return this.processes.get(id).getParams();
+        } finally {
+            rlock.unlock();
+        }
     }
 
     public String getProcessOutput(UUID id) {
-        return this.processes.get(id).readProcessOutputLine();
+        try {
+            rlock.lock();
+            return this.processes.get(id).readProcessOutputLine();
+        } finally {
+            rlock.unlock();
+        }
     }
 
     public Number getMeasure(UUID id, DESC desc) {
         Number result = 0;
-        switch (desc) {
-            case EDENSPACEUSED:
-                result = processes.get(id).getQry().getEdenSpace().getUsage().getUsed();
-                break;
-            case EDENSPACECOMMITTED:
-                result = processes.get(id).getQry().getEdenSpace().getUsage().getCommitted();
-                break;
-            case EDENSPACEMAX:
-                result = processes.get(id).getQry().getEdenSpace().getUsage().getMax();
-                break;
-            case EDENSPACEFREE:
-                result = (processes.get(id).getQry().getEdenSpace().
-                        getUsage().getCommitted()
-                        - processes.get(id).getQry().getEdenSpace().
-                        getUsage().getUsed());
-                break;
-            case SURVIVORSPACEUSED:
-                result = processes.get(id).getQry().getSurvivorSpace().getUsage().getUsed();
-                break;
-            case SURVIVORSPACECOMMITTED:
-                result = processes.get(id).getQry().getSurvivorSpace().getUsage().getCommitted();
-                break;
-            case SURVIVORSPACEMAX:
-                result = processes.get(id).getQry().getSurvivorSpace().getUsage().getMax();
-                break;
-            case SURVIVORSPACEFREE:
-                result = (processes.get(id).getQry().getSurvivorSpace().
-                        getUsage().getCommitted()
-                        - processes.get(id).getQry().getSurvivorSpace().
-                        getUsage().getUsed());
-                break;
-            case OLDGENSPACEUSED:
-                result = processes.get(id).getQry().getOldGenSpace().getUsage().getUsed();
-                break;
-            case OLDGENSPACECOMMITTED:
-                result = processes.get(id).getQry().getOldGenSpace().getUsage().getCommitted();
-                break;
-            case OLDGENSPACEMAX:
-                result = processes.get(id).getQry().getOldGenSpace().getUsage().getMax();
-                break;
-            case OLDGENSPACEFREE:
-                result = (processes.get(id).getQry().getOldGenSpace().
-                        getUsage().getCommitted()
-                        - processes.get(id).getQry().getOldGenSpace().
-                        getUsage().getUsed());
-                break;
-            case PERMGENSPACEUSED:
-                result = processes.get(id).getQry().getPermGenSpace().getUsage().getUsed();
-                break;
-            case PERMGENSPACECOMMITTED:
-                result = processes.get(id).getQry().getPermGenSpace().getUsage().getCommitted();
-                break;
-            case PERMGENSPACEMAX:
-                result = processes.get(id).getQry().getPermGenSpace().getUsage().getMax();
-                break;
-            case PERMGENSPACEFREE:
-                result = (processes.get(id).getQry().getPermGenSpace().
-                        getUsage().getCommitted()
-                        - processes.get(id).getQry().getPermGenSpace().
-                        getUsage().getUsed());
-                break;
+        try {
+            rlock.lock();
+            switch (desc) {
+                case EDENSPACEUSED:
+                    result = processes.get(id).getQry().getEdenSpace().getUsage().getUsed();
+                    break;
+                case EDENSPACECOMMITTED:
+                    result = processes.get(id).getQry().getEdenSpace().getUsage().getCommitted();
+                    break;
+                case EDENSPACEMAX:
+                    result = processes.get(id).getQry().getEdenSpace().getUsage().getMax();
+                    break;
+                case EDENSPACEFREE:
+                    result = (processes.get(id).getQry().getEdenSpace().
+                            getUsage().getCommitted()
+                            - processes.get(id).getQry().getEdenSpace().
+                            getUsage().getUsed());
+                    break;
+                case SURVIVORSPACEUSED:
+                    result = processes.get(id).getQry().getSurvivorSpace().getUsage().getUsed();
+                    break;
+                case SURVIVORSPACECOMMITTED:
+                    result = processes.get(id).getQry().getSurvivorSpace().getUsage().getCommitted();
+                    break;
+                case SURVIVORSPACEMAX:
+                    result = processes.get(id).getQry().getSurvivorSpace().getUsage().getMax();
+                    break;
+                case SURVIVORSPACEFREE:
+                    result = (processes.get(id).getQry().getSurvivorSpace().
+                            getUsage().getCommitted()
+                            - processes.get(id).getQry().getSurvivorSpace().
+                            getUsage().getUsed());
+                    break;
+                case OLDGENSPACEUSED:
+                    result = processes.get(id).getQry().getOldGenSpace().getUsage().getUsed();
+                    break;
+                case OLDGENSPACECOMMITTED:
+                    result = processes.get(id).getQry().getOldGenSpace().getUsage().getCommitted();
+                    break;
+                case OLDGENSPACEMAX:
+                    result = processes.get(id).getQry().getOldGenSpace().getUsage().getMax();
+                    break;
+                case OLDGENSPACEFREE:
+                    result = (processes.get(id).getQry().getOldGenSpace().
+                            getUsage().getCommitted()
+                            - processes.get(id).getQry().getOldGenSpace().
+                            getUsage().getUsed());
+                    break;
+                case PERMGENSPACEUSED:
+                    result = processes.get(id).getQry().getPermGenSpace().getUsage().getUsed();
+                    break;
+                case PERMGENSPACECOMMITTED:
+                    result = processes.get(id).getQry().getPermGenSpace().getUsage().getCommitted();
+                    break;
+                case PERMGENSPACEMAX:
+                    result = processes.get(id).getQry().getPermGenSpace().getUsage().getMax();
+                    break;
+                case PERMGENSPACEFREE:
+                    result = (processes.get(id).getQry().getPermGenSpace().
+                            getUsage().getCommitted()
+                            - processes.get(id).getQry().getPermGenSpace().
+                            getUsage().getUsed());
+                    break;
+            }
+        } finally {
+            rlock.unlock();
         }
         return result;
+    }
+
+    public void genLocalInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime, int returnDelay) {
+            processes.get(id).getQry().getGCGenerator().runLocalObjectCreator(numInstances,instanceSize,creationPauseTime, returnDelay);
+    }
+
+    public void genLongLivedInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime, int returnDelay) {
+            processes.get(id).getQry().getGCGenerator().runLongLivedObjectCreator(numInstances,instanceSize,creationPauseTime, returnDelay);
+    }
+
+    public String getGCInfo(UUID procId) {
+       return  processes.get(procId).getQry().getGCInfo();
     }
 
 }

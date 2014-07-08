@@ -6,7 +6,6 @@
 package za.co.jumpingbean.gc.testApp;
 
 import javax.inject.Inject;
-import za.co.jumpingbean.gc.testApp.Analiser;
 
 /**
  *
@@ -45,7 +44,9 @@ public class LocalObjectGenerator {
                 objs[i-1] = new TestObject(instanceSize*1024*1024);
                 Thread.sleep(creationDelay);
             }
-            Thread.sleep(methodReturnDelay);
+           synchronized(this){
+                this.wait(methodReturnDelay);
+           }
         } finally {
             analiser.decLocalObjectCount(i);
         }
