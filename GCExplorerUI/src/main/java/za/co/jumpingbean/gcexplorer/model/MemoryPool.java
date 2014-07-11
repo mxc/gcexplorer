@@ -51,13 +51,13 @@ public abstract class MemoryPool {
             }
 
             XYChart.Series<Number, Number> usedFreeSeries = new XYChart.Series();
-            //Initiaise usedFree series to prevent AreaGraph crashing on data not yet available
+            //Initiaise usedFree series to prevent AreaGraph crashing on empty data set
             List<Data<Number, Number>> tmpList = new ArrayList<>();
             tmpList.add(new Data(0, 0));
             usedFreeSeries.setData(FXCollections.observableArrayList(tmpList));
             usedFreeSeriesList.add(usedFreeSeries);
             String name = this.getClass().getSimpleName();
-            name= name.substring(0,name.indexOf("MemoryPool"));
+            name = name.substring(0, name.indexOf("MemoryPool"));
             if (i == 0) {
                 usedFreeSeries.setName(name + " Used");
             } else {
@@ -137,14 +137,14 @@ public abstract class MemoryPool {
                 int over = fcList1.size() - this.numDataPoints;
                 try {
                     fcList1.remove(0, over);
-                } catch (UnsupportedOperationException |NullPointerException ex) {
+                } catch (UnsupportedOperationException | NullPointerException ex) {
                     //javafx throws an error here.
                     //looks like it thinks its adding a data point
                     //that it has just been asked to remove
                 }
                 try {
                     fcList2.remove(0, over);
-                } catch (UnsupportedOperationException| NullPointerException ex) {
+                } catch (UnsupportedOperationException | NullPointerException ex) {
                     //javafx throws an error here.
                     //looks like it thinks its adding a data point
                     //that it has just been asked to remove
@@ -155,25 +155,41 @@ public abstract class MemoryPool {
                 int over = ufList1.size() - this.numDataPoints;
                 try {
                     ufList1.remove(0, over);
-                } catch (UnsupportedOperationException ex) {
+                } catch (UnsupportedOperationException | NullPointerException ex) {
                     //javafx throws an error here.
                     //looks like it thinks its adding a data point
                     //that it has just been asked to remove
                 }
                 try {
                     ufList2.remove(0, over);
-                } catch (UnsupportedOperationException ex) {
+                } catch (UnsupportedOperationException | NullPointerException ex) {
                     //javafx throws an error here.
                     //looks like it thinks its adding a data point
                     //that it has just been asked to remove
                 }
             }
             //TODO Make conversion of milliseconds accomodate changes in sampling time.
-            fcList1.add(new Data((ts.getTime() - startTime.getTime())/1000, used));
-            ufList1.add(new Data((ts.getTime() - startTime.getTime())/1000, used));
-            fcList2.add(new Data((ts.getTime() - startTime.getTime())/1000, committed));
-            ufList2.add(new Data((ts.getTime() - startTime.getTime())/1000, free));
+            try {
+                fcList1.add(new Data((ts.getTime() - startTime.getTime()) / 1000, used));
+            } catch (NullPointerException ex) {
 
+            }
+
+            try {
+                ufList1.add(new Data((ts.getTime() - startTime.getTime()) / 1000, used));
+            } catch (NullPointerException ex) {
+
+            }
+            try {
+                fcList2.add(new Data((ts.getTime() - startTime.getTime()) / 1000, committed));
+            } catch (NullPointerException ex) {
+
+            }
+            try {
+                ufList2.add(new Data((ts.getTime() - startTime.getTime()) / 1000, free));
+            } catch (NullPointerException ex) {
+
+            }
         } finally {
             lock.writeLock().unlock();
         }

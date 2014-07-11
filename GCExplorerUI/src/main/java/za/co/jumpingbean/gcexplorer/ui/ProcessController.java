@@ -118,6 +118,16 @@ public class ProcessController implements Runnable {
 
             proc.getSurvivorPool().setMaxValue(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).doubleValue() / convert);
 
+
+            //Set free survivor space stats
+            proc.getEmptySurvivorPool().setUsedValue(0d);
+            proc.getEmptySurvivorPool().setCommittedValue(result2);
+            proc.getEmptySurvivorPool().setFreeValue(result2);
+            runLater(proc.getEmptySurvivorPool(), ts, 0, result2, result2);
+            proc.getEmptySurvivorPool().setMaxValue(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).doubleValue() / convert);
+            
+            
+            
             result = gen.getMeasure(procId, DESC.OLDGENSPACEUSED).doubleValue() / convert;
             proc.getOldGenPool().setUsedValue(result);
             //runLater(proc.getOldGenPool(), 0, ts, result);
@@ -219,11 +229,11 @@ public class ProcessController implements Runnable {
         }
     }
 
-    private void runLater(MemoryPool pool, Timestamp ts, final double result, double result2, double result3) {
+    private void runLater(MemoryPool pool, Timestamp ts, final double used, double committed, double free) {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                pool.addDataPoint(ts, result, result2, result3);
+                pool.addDataPoint(ts, used, committed, free);
             }
         });
     }

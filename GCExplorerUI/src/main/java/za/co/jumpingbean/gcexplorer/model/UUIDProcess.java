@@ -5,6 +5,8 @@
  */
 package za.co.jumpingbean.gcexplorer.model;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -29,19 +31,21 @@ public class UUIDProcess {
     private final OldGenMemoryPool oldGenPool;
     private final List<MemoryPool> list;
     private final PermGenMemoryPool permGenPool;
+    private final EmptySurvivorMemoryPool emptySurvivorPool;
     private final ObservableList<XYChart.Series<String, Number>> stackedBarChartSeries = FXCollections.observableArrayList();
     private final ObservableList<XYChart.Series<Number, Number>> stackedAreaChartSeries = FXCollections.observableArrayList();
     private final SimpleStringProperty gcInfo = new SimpleStringProperty();
     private final SimpleStringProperty sysInfo = new SimpleStringProperty();
     private final String initParams;
-    
+
     public UUIDProcess(UUID id, EdenMemoryPool edenPool,
-            SurvivorMemoryPool survivorPool, OldGenMemoryPool oldGenPool, PermGenMemoryPool permGenPool,String initParams) {
+            SurvivorMemoryPool survivorPool, EmptySurvivorMemoryPool emptySurvivorMemoryPool, OldGenMemoryPool oldGenPool, PermGenMemoryPool permGenPool, String initParams) {
         this.id = id;
         this.edenPool = edenPool;
         this.survivorPool = survivorPool;
         this.oldGenPool = oldGenPool;
         this.permGenPool = permGenPool;
+        this.emptySurvivorPool = emptySurvivorMemoryPool;
         this.initParams = initParams;
         list = new LinkedList<>();
         list.add(this.edenPool);
@@ -51,6 +55,8 @@ public class UUIDProcess {
         stackedBarChartSeries.add(new XYChart.Series<>());//eden used
         stackedBarChartSeries.add(new XYChart.Series<>());//survivor used
         stackedBarChartSeries.add(new XYChart.Series<>());//survior free
+        stackedBarChartSeries.add(new XYChart.Series<>());//empty survivor user
+        stackedBarChartSeries.add(new XYChart.Series<>());//empty survivor free
         stackedBarChartSeries.add(new XYChart.Series<>());//old gen used
         stackedBarChartSeries.add(new XYChart.Series<>());//old gen free
         stackedBarChartSeries.get(0).setName("Eden Used");
@@ -61,14 +67,19 @@ public class UUIDProcess {
         stackedBarChartSeries.get(2).getData().add(new Data("Total", 0));
         stackedBarChartSeries.get(3).setName("Survivor Free");
         stackedBarChartSeries.get(3).getData().add(new Data("Total", 0));
-        stackedBarChartSeries.get(4).setName("Old Gen Used");
+        stackedBarChartSeries.get(4).setName("Empty Survivor Used");
         stackedBarChartSeries.get(4).getData().add(new Data("Total", 0));
-        stackedBarChartSeries.get(5).setName("Old Gen Free");
+        stackedBarChartSeries.get(5).setName("Empty Survivor Free");
         stackedBarChartSeries.get(5).getData().add(new Data("Total", 0));
+        stackedBarChartSeries.get(6).setName("Old Gen Used");
+        stackedBarChartSeries.get(6).getData().add(new Data("Total", 0));
+        stackedBarChartSeries.get(7).setName("Old Gen Free");
+        stackedBarChartSeries.get(7).getData().add(new Data("Total", 0));
 
-        stackedAreaChartSeries.addAll(0,this.edenPool.usedFreeSeriesList);
-        stackedAreaChartSeries.addAll(2,this.survivorPool.usedFreeSeriesList);
-        stackedAreaChartSeries.addAll(4,this.oldGenPool.usedFreeSeriesList);
+        stackedAreaChartSeries.addAll(0, this.edenPool.usedFreeSeriesList);
+        stackedAreaChartSeries.addAll(2, this.survivorPool.usedFreeSeriesList);
+        stackedAreaChartSeries.addAll(4, this.emptySurvivorPool.usedFreeSeriesList);
+        stackedAreaChartSeries.addAll(6, this.oldGenPool.usedFreeSeriesList);
 
         edenPool.getUsed().measureProperty().addListener(new ChangeListener<Number>() {
 
@@ -102,11 +113,21 @@ public class UUIDProcess {
             }
         });
 
+        //update empty survivor space.
+        survivorPool.getCommitted().measureProperty().addListener(new ChangeListener<Number>() {
+
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                //stackedBarChartSeries.get(4).getData().get(0).setYValue(newValue);
+                stackedBarChartSeries.get(5).getData().get(0).setYValue(newValue);
+            }
+        });
+
         oldGenPool.getUsed().measureProperty().addListener(new ChangeListener<Number>() {
 
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                stackedBarChartSeries.get(4).getData().get(0).setYValue(newValue);
+                stackedBarChartSeries.get(6).getData().get(0).setYValue(newValue);
             }
         });
 
@@ -114,7 +135,7 @@ public class UUIDProcess {
 
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                stackedBarChartSeries.get(5).getData().get(0).setYValue(newValue);
+                stackedBarChartSeries.get(7).getData().get(0).setYValue(newValue);
             }
         });
 
@@ -142,6 +163,10 @@ public class UUIDProcess {
 
     public PermGenMemoryPool getPermGenPool() {
         return this.permGenPool;
+    }
+
+    public EmptySurvivorMemoryPool getEmptySurvivorPool() {
+        return emptySurvivorPool;
     }
 
     public List<MemoryPool> getDataItems() {
@@ -173,26 +198,39 @@ public class UUIDProcess {
     }
 
     public double getMaxHeap() {
-            return edenPool.getMax().getMeasure()+survivorPool.getMax().getMeasure()+oldGenPool.getMax().getMeasure();
+        return this.getMaxYoungGen() + oldGenPool.getMax().getMeasure();
     }
 
-    
-    public void setSysInfo(){
+    public void setSysInfo() {
         StringBuilder str = new StringBuilder(this.initParams);
-        str.append("Max Heap:").append(this.getMaxHeap());
-         this.sysInfo.set(str.toString());
+        str.append("\n\rMax Eden:\t\t").append(this.edenPool.getMax().getMeasure());
+        str.append("\n\rMax Survivor:\t\t").append(this.getSurvivorPool().getMax().getMeasure());
+        str.append("\n\rMax Empty Survivor:\t\t").append(this.getEmptySurvivorPool().getMax().getMeasure());
+        str.append("\n\r\t\t---------------");
+        str.append("\n\rYoung Gen Total:\t\t").append(this.getMaxYoungGen());
+        str.append("\n\rMax Old Gen:\t\t").append(this.getOldGenPool().getMax().getMeasure());
+        str.append("\n\r\t\t---------------");
+        str.append("\n\rMax Heap:\t\t").append(this.getMaxHeap());
+        //force update to display. Seems to not update in some instances
+        //TODO Invesitgate!
+        this.sysInfo.set("Updating,...");
+        this.sysInfo.set(str.toString());
     }
-    
-    public void setGCInfo(String str){
+
+    public void setGCInfo(String str) {
         this.gcInfo.set(str);
     }
-    
-    public void addSystemInfoEventListener(ChangeListener changeListener){
+
+    public void addSystemInfoEventListener(ChangeListener changeListener) {
         this.sysInfo.addListener(changeListener);
     }
-        
-    public void addGCInfoEventListener(ChangeListener changeListener){
+
+    public void addGCInfoEventListener(ChangeListener changeListener) {
         this.gcInfo.addListener(changeListener);
     }
-    
+
+    private double getMaxYoungGen() {
+        return this.getEdenPool().getMax().getMeasure() + this.getSurvivorPool().getMax().getMeasure() * 2;
+    }
+
 }

@@ -8,27 +8,27 @@
 
 <HBox fx:id="hBox" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <GridPane fx:id="gridPane" BorderPane.alignment="CENTER">
+        <GridPane fx:id="gridPane" minHeight="600.0" minWidth="800.0" BorderPane.alignment="CENTER">
             <columnConstraints>
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
             </columnConstraints>
             <rowConstraints>
-                <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                <RowConstraints vgrow="SOMETIMES" />
-                <RowConstraints vgrow="SOMETIMES" />
-<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints percentHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints percentHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints percentHeight="30.0" vgrow="SOMETIMES" />
+<RowConstraints percentHeight="10.0" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
-                <StackedAreaChart fx:id="chtStackedAreaTotalMemory" animated="false" createSymbols="false" title="Total Memory" GridPane.columnIndex="1" GridPane.rowSpan="2">
+                <StackedAreaChart fx:id="chtStackedAreaTotalMemory" animated="false" createSymbols="false" title="Total Memory Pool" GridPane.columnIndex="1" GridPane.rowSpan="2">
                     <xAxis>
                         <NumberAxis side="BOTTOM" />
                     </xAxis>
                     <yAxis>
-                        <NumberAxis label="Memory %" side="LEFT" />
+                        <NumberAxis label="Memory" side="LEFT" />
                     </yAxis>
                 </StackedAreaChart>
-                <LineChart fx:id="chtEdenSpace" alternativeRowFillVisible="false" animated="false" createSymbols="false" horizontalZeroLineVisible="false" legendSide="TOP" prefWidth="600.0" title="Eden Space" verticalZeroLineVisible="false" BorderPane.alignment="CENTER">
+                <LineChart fx:id="chtEdenSpace" alternativeRowFillVisible="false" animated="false" createSymbols="false" horizontalZeroLineVisible="false" legendSide="TOP" legendVisible="false" prefWidth="600.0" title="Eden Space" verticalZeroLineVisible="false" BorderPane.alignment="CENTER">
                     <xAxis>
                         <NumberAxis forceZeroInRange="false" side="BOTTOM" />
                     </xAxis>
@@ -36,7 +36,7 @@
                         <NumberAxis forceZeroInRange="false" side="LEFT" />
                     </yAxis>
                 </LineChart>
-                <LineChart fx:id="chtSurvivorSpace" alternativeRowFillVisible="false" animated="false" createSymbols="false" horizontalZeroLineVisible="false" title="Survivor Space" verticalZeroLineVisible="false" BorderPane.alignment="CENTER" GridPane.rowIndex="1">
+                <LineChart fx:id="chtSurvivorSpace" alternativeRowFillVisible="false" animated="false" createSymbols="false" horizontalZeroLineVisible="false" legendVisible="false" title="Active Survivor Space" verticalZeroLineVisible="false" BorderPane.alignment="CENTER" GridPane.rowIndex="1">
                     <xAxis>
                         <NumberAxis forceZeroInRange="false" side="BOTTOM" />
                     </xAxis>
@@ -44,7 +44,7 @@
                         <NumberAxis forceZeroInRange="false" side="LEFT" />
                     </yAxis>
                 </LineChart>
-                <LineChart fx:id="chtOldGenSpace" alternativeRowFillVisible="false" animated="false" createSymbols="false" horizontalZeroLineVisible="false" title="Old Generation" verticalZeroLineVisible="false" GridPane.rowIndex="2">
+                <LineChart fx:id="chtOldGenSpace" alternativeRowFillVisible="false" animated="false" createSymbols="false" horizontalZeroLineVisible="false" legendVisible="false" title="Old Generation" verticalZeroLineVisible="false" GridPane.rowIndex="2">
                     <xAxis>
                         <NumberAxis forceZeroInRange="false" side="BOTTOM" />
                     </xAxis>
@@ -54,7 +54,7 @@
                 </LineChart>
 <HBox GridPane.columnIndex="1" GridPane.rowIndex="2">
 <children>
-                        <LineChart fx:id="chtPermGenSpace" alternativeRowFillVisible="false" createSymbols="false" title="Perm Gen">
+                        <LineChart fx:id="chtPermGenSpace" alternativeRowFillVisible="false" createSymbols="false" legendVisible="false" title="Perm Gen">
                             <xAxis>
                                 <NumberAxis side="BOTTOM" />
                             </xAxis>
@@ -68,7 +68,7 @@
 </children>
 </VBox>
 </children>
-</HBox><Label fx:id="lblSysInfo" text="lblSysInfo" GridPane.rowIndex="3" /><Label fx:id="lblGCInfo" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+</HBox><Label fx:id="lblGCInfo" focusTraversable="false" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.valignment="CENTER" /><TextArea fx:id="lblSysInfo" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" GridPane.rowIndex="3" />
             </children>
         </GridPane>
         <StackedBarChart fx:id="chtStackedBarTotalMemory" alternativeRowFillVisible="false" horizontalZeroLineVisible="false" prefWidth="100.0" title="Total Memory" verticalZeroLineVisible="false">
@@ -76,7 +76,7 @@
                 <CategoryAxis animated="false" autoRanging="false" label="Process" maxWidth="30.0" side="BOTTOM" fx:id="xAxisCategory" />
             </xAxis>
             <yAxis>
-                <NumberAxis animated="false" label="Memory (%)" side="LEFT" />
+                <NumberAxis animated="false" label="Memory" side="LEFT" />
             </yAxis>
             <padding>
                 <Insets bottom="10.0" />

@@ -21,11 +21,9 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -209,7 +207,7 @@ public class MainForm implements Initializable {
 
             @Override
             public void handle(Event event) {
-                UUID id = (UUID) ((Tab)event.getSource()).getUserData();
+                UUID id = (UUID) (((Tab)event.getSource()).getUserData());
                 processData.remove(app.getProcessController().getUUIDProcess(id));
                 app.getProcessController().stopProcess(id);
                     

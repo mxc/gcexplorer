@@ -21,7 +21,9 @@ public class ProcessFactory {
     public static UUIDProcess newProcess(UUID id,String initParams) {
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         return new UUIDProcess(id,new EdenMemoryPool(ts,count),
-                new SurvivorMemoryPool(ts,count),new OldGenMemoryPool(ts,count),
+                new SurvivorMemoryPool(ts,count),
+                new EmptySurvivorMemoryPool(ts,count),
+                new OldGenMemoryPool(ts,count),
                 new PermGenMemoryPool(ts,count),initParams);
     }
     

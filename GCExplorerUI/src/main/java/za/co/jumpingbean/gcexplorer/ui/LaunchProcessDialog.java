@@ -115,7 +115,6 @@ public class LaunchProcessDialog implements Initializable {
             return;
         }
         try {
-
             procId = app.getProcessController().launchProcess(selectedGC, gcOptions);
         } catch (IOException |
                 IllegalStateException |
@@ -184,7 +183,7 @@ public class LaunchProcessDialog implements Initializable {
             @Override
             public void handle(Event event) {
                 boolean disable = false;
-                if (rdbSerial.isSelected()) {
+                if (rdbConcMarkSweep.isSelected()) {
                     disable = true;
                 }
                 setCMSOptionsState(!disable);
@@ -247,6 +246,7 @@ public class LaunchProcessDialog implements Initializable {
         });
 
         this.btnLaunch.setOnAction(this::launchProcess);
+        this.rdbSerial.fireEvent(new ActionEvent());
     }
 
     private void setCMSOptionsState(boolean state) {
@@ -282,7 +282,7 @@ public class LaunchProcessDialog implements Initializable {
         ArrayList<String> list = new ArrayList<>();
         StringBuilder errorMsg = new StringBuilder();
 
-        this.addTextFieldOptionBetween(txtCMSInitiatingOccupancyFraction, "-XX:CMSInitiatingOccupancyFraction="
+       this.addTextFieldOptionBetween(txtCMSInitiatingOccupancyFraction, "-XX:CMSInitiatingOccupancyFraction="
                 + txtCMSInitiatingOccupancyFraction.getText(), "CMSInitiatingOccupancyFraction", 0, 100, list, errorMsg);
 
         this.addTextFieldOption(txtCMSTriggerPermRatio, "-XX:CMSTriggerPermRatio="
@@ -300,9 +300,6 @@ public class LaunchProcessDialog implements Initializable {
         this.addTextFieldOptionBetween(txtG1ReservePercent, "-XX:G1ReservePercent="
                 + txtG1ReservePercent.getText(), "G1ReservePercent=", 0, 100, list, errorMsg);
 
-        this.addTextFieldOption(txtInitialTenuringThreshold, "-XX:InitialTenuringThreshold="
-                + txtInitialTenuringThreshold.getText(), "InitialTenuringThreshold", list, errorMsg);
-
         this.addTextFieldOption(txtInitiatingHeapOccupancyPercent, "-XX:InitiatingHeapOccupancyPercent="
                 + txtInitiatingHeapOccupancyPercent.getText(), "InitiatingHeapOccupancyPercent", list, errorMsg);
 
@@ -312,11 +309,24 @@ public class LaunchProcessDialog implements Initializable {
         this.addTextFieldOption(txtMaxNewSize, "-XX:MaxNewSize="
                 + txtMaxNewSize.getText() + "m", "MaxNewSize", list, errorMsg);
 
-        this.addTextFieldOption(txtMaxPermSize, "-XX:MaxNewSize="
+        this.addTextFieldOption(txtMaxPermSize, "-XX:MaxPermSize="
                 + txtMaxPermSize.getText() + "m", "MaxPermSize", list, errorMsg);
 
         this.addTextFieldOptionBetween(txtMaxTenuringThreshold, "-XX:MaxTenuringThreshold="
                 + txtMaxTenuringThreshold.getText(), "MaxTenuringThreshold", 0, 15, list, errorMsg);
+
+        int tmpMax = 0;
+        if (!txtMaxTenuringThreshold.getText().isEmpty()) {
+            try {
+                String text= txtMaxTenuringThreshold.getText();
+                tmpMax = Integer.parseInt(text);
+                tmpMax = tmpMax > 15 ? 15 : tmpMax;
+            } catch (NumberFormatException ex) {
+                tmpMax = 0;
+            }
+        }
+        this.addTextFieldOptionBetween(txtInitialTenuringThreshold, "-XX:InitialTenuringThreshold="
+                + txtInitialTenuringThreshold.getText(), "InitialTenuringThreshold", 0, tmpMax, list, errorMsg);
 
         this.addTextFieldOption(txtNewRatio, "-XX:NewRatio="
                 + txtNewRatio.getText(), "-XX:NewRatio=", list, errorMsg);

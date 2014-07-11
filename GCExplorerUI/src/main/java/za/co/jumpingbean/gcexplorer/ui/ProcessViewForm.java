@@ -60,7 +60,7 @@ public class ProcessViewForm implements Initializable {
     @FXML
     private Button btnGenerateGarbageOptions;
     @FXML
-    private Label lblSysInfo;
+    private TextArea lblSysInfo;
     @FXML
     private Label lblGCInfo;
     @FXML
@@ -186,6 +186,8 @@ public class ProcessViewForm implements Initializable {
         chtSurvivorSpace.getYAxis().setLabel(unit.getName());
         chtOldGenSpace.getYAxis().setLabel(unit.getName());
         chtPermGenSpace.getYAxis().setLabel(unit.getName());
+        chtStackedBarTotalMemory.getYAxis().setLabel(unit.getName());
+        chtStackedAreaTotalMemory.getYAxis().setLabel(unit.getName());
     }
 
     void setGenStatus(String str) {

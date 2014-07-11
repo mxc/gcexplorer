@@ -6,12 +6,12 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<GridPane prefHeight="700.0" prefWidth="733.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane prefHeight="697.0" prefWidth="751.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="472.0" minWidth="10.0" prefWidth="332.0" />
-<ColumnConstraints hgrow="SOMETIMES" maxWidth="472.0" minWidth="6.0" prefWidth="34.0" />
-    <ColumnConstraints hgrow="SOMETIMES" maxWidth="370.0" minWidth="10.0" prefWidth="318.0" />
-<ColumnConstraints hgrow="SOMETIMES" maxWidth="300.0" minWidth="10.0" prefWidth="34.0" />
+<ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="6.0" prefWidth="50.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="370.0" minWidth="10.0" prefWidth="312.0" />
+<ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
   </columnConstraints>
   <rowConstraints>
 <RowConstraints maxHeight="49.0" minHeight="10.0" prefHeight="25.0" vgrow="NEVER" />
@@ -39,11 +39,7 @@
 <RowConstraints maxHeight="515.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 <RowConstraints maxHeight="515.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
   </rowConstraints>
-<children><TextArea fx:id="txtStatus" editable="false" prefHeight="157.0" prefWidth="401.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="22" GridPane.rowSpan="2" />
-<RadioButton fx:id="rdbConcMarkSweep" mnemonicParsing="false" text="Conc Mark Sweep GC" toggleGroup="$garbageCollectorGroup" GridPane.columnIndex="2" GridPane.rowIndex="2">
-<GridPane.margin>
-<Insets left="10.0" />
-</GridPane.margin></RadioButton>
+<children><TextArea fx:id="txtStatus" editable="false" prefHeight="157.0" prefWidth="401.0" style="-fx-text-fill: FIREBRICK;" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="22" GridPane.rowSpan="2" />
 <RadioButton fx:id="rdbSerial" mnemonicParsing="false" selected="true" text="Serial GC" GridPane.rowIndex="1">
 <toggleGroup>
 <ToggleGroup fx:id="garbageCollectorGroup" />
@@ -52,6 +48,10 @@
 <Insets left="10.0" />
 </GridPane.margin>
 </RadioButton>
+<RadioButton fx:id="rdbConcMarkSweep" mnemonicParsing="false" text="Conc Mark Sweep GC" toggleGroup="$garbageCollectorGroup" GridPane.columnIndex="2" GridPane.rowIndex="2">
+<GridPane.margin>
+<Insets left="10.0" />
+</GridPane.margin></RadioButton>
 <RadioButton fx:id="rdbG1" mnemonicParsing="false" text="G1 GC" toggleGroup="$garbageCollectorGroup" GridPane.rowIndex="3">
 <padding>
 <Insets left="10.0" />
