@@ -1,8 +1,25 @@
+/* 
+ * Copyright (C) 2014 Mark Clarke
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package za.co.jumpingbean.gc.service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -78,7 +95,7 @@ public class GeneratorService {
         //connecting to JMX server
         synchronized (proc) {
             try {
-                proc.wait(500L);
+                proc.wait(1000L);
             } catch (InterruptedException ex) {
                 Logger.getLogger(GeneratorService.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -121,9 +138,10 @@ public class GeneratorService {
     public void stopAllTestApps() {
         try {
             wlock.lock();
-            for (UUID id : processes.keySet()) {
-                stopTestApp(id);
+            for (ProcessObject proc : processes.values()) {
+                proc.stop();
             }
+            processes.clear();
         } finally {
             wlock.unlock();
         }
@@ -156,10 +174,13 @@ public class GeneratorService {
         }
     }
 
-    public Number getMeasure(UUID id, DESC desc) {
+    public Number queryJMXForValue(UUID id, DESC desc) throws GCExplorerServiceException {
         Number result = 0;
         try {
             rlock.lock();
+            if (processes.get(id)==null){
+                throw new GCExplorerServiceException("Process has been removed");
+            }
             switch (desc) {
                 case EDENSPACEUSED:
                     result = processes.get(id).getQry().getEdenSpace().getUsage().getUsed();
@@ -228,14 +249,18 @@ public class GeneratorService {
         return result;
     }
 
-    public void genLocalInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime, int returnDelay) {
-            processes.get(id).getQry().getGCGenerator().runLocalObjectCreator(numInstances,instanceSize,creationPauseTime, returnDelay);
+    public void genLocalInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
+            processes.get(id).getQry().getGCGenerator().runLocalObjectCreator(numInstances,instanceSize,creationPauseTime);
     }
 
-    public void genLongLivedInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime, int returnDelay) {
-            processes.get(id).getQry().getGCGenerator().runLongLivedObjectCreator(numInstances,instanceSize,creationPauseTime, returnDelay);
+    public void genLongLivedInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
+            processes.get(id).getQry().getGCGenerator().runLongLivedObjectCreator(numInstances,instanceSize,creationPauseTime);
     }
 
+    public void releaseLongLivedInstances(UUID id, int numInstances, boolean reverse) {
+            processes.get(id).getQry().getGCGenerator().releaseLongLivedObjects(numInstances,reverse);
+    }
+    
     public String getGCInfo(UUID procId) {
        return  processes.get(procId).getQry().getGCInfo();
     }

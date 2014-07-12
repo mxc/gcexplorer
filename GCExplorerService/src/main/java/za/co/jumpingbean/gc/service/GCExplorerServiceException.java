@@ -14,27 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package za.co.jumpingbean.gcexplorer.model;
-
-import java.sql.Timestamp;
-import java.util.UUID;
-import za.co.jumpingbean.gcexplorer.ui.EdenMemoryPool;
+package za.co.jumpingbean.gc.service;
 
 /**
  *
  * @author mark
  */
-public class ProcessFactory {
-
-    static final int count = 40;
-    
-    public static UUIDProcess newProcess(UUID id,String initParams) {
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        return new UUIDProcess(id,new EdenMemoryPool(ts,count),
-                new SurvivorMemoryPool(ts,count),
-                new EmptySurvivorMemoryPool(ts,count),
-                new OldGenMemoryPool(ts,count),
-                new PermGenMemoryPool(ts,count),initParams);
+public class GCExplorerServiceException extends Exception {
+    public GCExplorerServiceException(String msg){
+        super(msg);
     }
-    
 }

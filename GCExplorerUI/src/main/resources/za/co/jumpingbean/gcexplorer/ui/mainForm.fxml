@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (C) 2014 Mark Clarke
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
 
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
@@ -7,13 +23,13 @@
 
 <BorderPane id="mainLayout" fx:id="mainLayout" prefHeight="600.0" prefWidth="800.0" stylesheets="@explorer.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <top>
-        <VBox prefHeight="135.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+        <VBox BorderPane.alignment="CENTER">
             <children>
                 <MenuBar>
                     <menus>
                         <Menu mnemonicParsing="false" text="Main">
                             <items>
-                                <MenuItem fx:id="mnuNewProcess" mnemonicParsing="false" text="New Process" />
+                                <MenuItem fx:id="mnuNewProcess" mnemonicParsing="false" text="New Process" /><MenuItem fx:id="mnuNumDataPoints" mnemonicParsing="false" text="Number of Data Points" />
                                 <MenuItem mnemonicParsing="false" text="Close" />
                             </items>
                         </Menu>
@@ -31,36 +47,36 @@
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="About" />
+                                <MenuItem fx:id="mnuAbout" mnemonicParsing="false" text="About" />
                             </items>
                         </Menu>
                     </menus>
                 </MenuBar>
-                <TableView id="tblDetail" fx:id="tblDetails" prefHeight="105.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+                <TableView id="tblDetail" fx:id="tblDetails" prefHeight="105.0" tableMenuButtonVisible="true" BorderPane.alignment="CENTER">
                     <columns>
-                        <TableColumn fx:id="tcDescription" editable="false" prefWidth="110.0" text="Description" />
-                        <TableColumn editable="false" prefWidth="75.0" text="Eden">
+                        <TableColumn fx:id="tcDescription" editable="false" minWidth="110.0" prefWidth="-1.0" text="Description" />
+                        <TableColumn editable="false" minWidth="300.0" prefWidth="-1.0" text="Eden">
                             <columns>
-                                <TableColumn id="measure" fx:id="tcEdenCommitted" editable="false" minWidth="0.0" prefWidth="91.0" styleClass="table-column,eden-column" text="Committed" />
-                                <TableColumn fx:id="tcEdenUsed" editable="false" prefWidth="60.0" styleClass="table-column,eden-column" text="Used" />
-                                <TableColumn fx:id="tcEdenFree" editable="false" prefWidth="79.0" styleClass="table-column,eden-colomn" text="Free" />
-                                <TableColumn fx:id="tcEdenMax" editable="false" prefWidth="91.0" styleClass="table-column,eden-column" text="Max" />
+                                <TableColumn id="measure" fx:id="tcEdenCommitted" editable="false" minWidth="90.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Committed" />
+                                <TableColumn fx:id="tcEdenUsed" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Used" />
+                                <TableColumn fx:id="tcEdenFree" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-colomn" text="Free" />
+                                <TableColumn fx:id="tcEdenMax" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Max" />
                             </columns>
                         </TableColumn>
-                        <TableColumn editable="false" prefWidth="75.0" text="Survivor">
+                        <TableColumn editable="false" minWidth="300.0" prefWidth="-1.0" text="Survivor">
                             <columns>
-                                <TableColumn id="measure" fx:id="tcSurvivorCommitted" editable="false" minWidth="0.0" prefWidth="91.0" styleClass="table-column,eden-column" text="Committed" />
-                                <TableColumn fx:id="tcSurvivorUsed" editable="false" prefWidth="60.0" styleClass="table-column,eden-column" text="Used" />
-                                <TableColumn fx:id="tcSurvivorFree" editable="false" prefWidth="79.0" styleClass="table-column,eden-colomn" text="Free" />
-                                <TableColumn fx:id="tcSurvivorMax" editable="false" prefWidth="91.0" styleClass="table-column,eden-column" text="Max" />
+                                <TableColumn id="measure" fx:id="tcSurvivorCommitted" editable="false" minWidth="90.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Committed" />
+                                <TableColumn fx:id="tcSurvivorUsed" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Used" />
+                                <TableColumn fx:id="tcSurvivorFree" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-colomn" text="Free" />
+                                <TableColumn fx:id="tcSurvivorMax" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Max" />
                             </columns>
                         </TableColumn>
-                        <TableColumn editable="false" prefWidth="75.0" text="OldGen">
+                        <TableColumn editable="false" minWidth="300.0" prefWidth="-1.0" text="OldGen">
                             <columns>
-                                <TableColumn id="measure" fx:id="tcOldGenCommitted" editable="false" minWidth="0.0" prefWidth="91.0" styleClass="table-column,eden-column" text="Committed" />
-                                <TableColumn fx:id="tcOldGenUsed" editable="false" prefWidth="60.0" styleClass="table-column,eden-column" text="Used" />
-                                <TableColumn fx:id="tcOldGenFree" editable="false" prefWidth="79.0" styleClass="table-column,eden-colomn" text="Free" />
-                                <TableColumn fx:id="tcOldGenMax" editable="false" prefWidth="91.0" styleClass="table-column,eden-column" text="Max" />
+                                <TableColumn id="measure" fx:id="tcOldGenCommitted" editable="false" minWidth="90.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Committed" />
+                                <TableColumn fx:id="tcOldGenUsed" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Used" />
+                                <TableColumn fx:id="tcOldGenFree" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-colomn" text="Free" />
+                                <TableColumn fx:id="tcOldGenMax" editable="false" minWidth="70.0" prefWidth="-1.0" styleClass="table-column,eden-column" text="Max" />
                             </columns>
                         </TableColumn>
                         <TableColumn prefWidth="75.0" text="Perm Gen">

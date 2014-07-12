@@ -1,12 +1,24 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * Copyright (C) 2014 Mark Clarke
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package za.co.jumpingbean.gcexplorer.model;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javafx.collections.FXCollections;
@@ -40,9 +52,10 @@ public abstract class MemoryPool {
         freeCommittedSeriesList = FXCollections.observableArrayList(new ArrayList<XYChart.Series<Number, Number>>());
         usedFreeSeriesList = FXCollections.observableArrayList(new ArrayList<XYChart.Series<Number, Number>>());
         lock = new ReentrantReadWriteLock();
+        //create empty data series
         for (int i = 0; i < 2; i++) {
             XYChart.Series<Number, Number> freeCommittedSeries = new XYChart.Series();
-            freeCommittedSeries.setData(FXCollections.observableArrayList(new ArrayList<Data<Number, Number>>()));
+            freeCommittedSeries.setData(FXCollections.observableArrayList(new LinkedList<Data<Number, Number>>()));
             freeCommittedSeriesList.add(freeCommittedSeries);
             if (i == 0) {
                 freeCommittedSeries.setName("Used");
@@ -52,7 +65,7 @@ public abstract class MemoryPool {
 
             XYChart.Series<Number, Number> usedFreeSeries = new XYChart.Series();
             //Initiaise usedFree series to prevent AreaGraph crashing on empty data set
-            List<Data<Number, Number>> tmpList = new ArrayList<>();
+            List<Data<Number, Number>> tmpList = new LinkedList<>();
             tmpList.add(new Data(0, 0));
             usedFreeSeries.setData(FXCollections.observableArrayList(tmpList));
             usedFreeSeriesList.add(usedFreeSeries);
@@ -133,66 +146,51 @@ public abstract class MemoryPool {
 
         lock.writeLock().lock();
         try {
+
+            //TODO Make conversion of milliseconds accomodate changes in sampling time.
+            this.addDataWithRetry(fcList1, new Data((ts.getTime() - startTime.getTime()) / 1000, used),"used");
+            this.addDataWithRetry(ufList1, new Data((ts.getTime() - startTime.getTime()) / 1000, used),"used");
+            this.addDataWithRetry(fcList2, new Data((ts.getTime() - startTime.getTime()) / 1000, committed),"committed");
+            this.addDataWithRetry(ufList2, new Data((ts.getTime() - startTime.getTime()) / 1000, free),"free");
+
             if (fcList1.size() > this.numDataPoints) {
                 int over = fcList1.size() - this.numDataPoints;
-                try {
-                    fcList1.remove(0, over);
-                } catch (UnsupportedOperationException | NullPointerException ex) {
-                    //javafx throws an error here.
-                    //looks like it thinks its adding a data point
-                    //that it has just been asked to remove
-                }
-                try {
-                    fcList2.remove(0, over);
-                } catch (UnsupportedOperationException | NullPointerException ex) {
-                    //javafx throws an error here.
-                    //looks like it thinks its adding a data point
-                    //that it has just been asked to remove
-                }
-
+                this.removeExcessDataItems(fcList1, over,"used");
+                this.removeExcessDataItems(fcList2, over,"used");
             }
             if (ufList1.size() > this.numDataPoints) {
                 int over = ufList1.size() - this.numDataPoints;
-                try {
-                    ufList1.remove(0, over);
-                } catch (UnsupportedOperationException | NullPointerException ex) {
-                    //javafx throws an error here.
-                    //looks like it thinks its adding a data point
-                    //that it has just been asked to remove
-                }
-                try {
-                    ufList2.remove(0, over);
-                } catch (UnsupportedOperationException | NullPointerException ex) {
-                    //javafx throws an error here.
-                    //looks like it thinks its adding a data point
-                    //that it has just been asked to remove
-                }
-            }
-            //TODO Make conversion of milliseconds accomodate changes in sampling time.
-            try {
-                fcList1.add(new Data((ts.getTime() - startTime.getTime()) / 1000, used));
-            } catch (NullPointerException ex) {
-
-            }
-
-            try {
-                ufList1.add(new Data((ts.getTime() - startTime.getTime()) / 1000, used));
-            } catch (NullPointerException ex) {
-
-            }
-            try {
-                fcList2.add(new Data((ts.getTime() - startTime.getTime()) / 1000, committed));
-            } catch (NullPointerException ex) {
-
-            }
-            try {
-                ufList2.add(new Data((ts.getTime() - startTime.getTime()) / 1000, free));
-            } catch (NullPointerException ex) {
-
-            }
+                this.removeExcessDataItems(ufList1, over,"committed");
+                this.removeExcessDataItems(ufList2, over,"free");
+            }            
+            
         } finally {
             lock.writeLock().unlock();
         }
     }
 
+    //Sometime get null pointer exceptions when adding points and points have been removed.
+    private void addDataWithRetry(ObservableList<Data<Number, Number>> list, Data data,String type) {
+        try {
+            list.add(data);
+        } catch(NullPointerException ex){
+            //Weird null pointer exception from XYChart.Series complaining about
+            //chart pointer being null for PermGen and EmptySurvivorSpace
+            //Following up with JavaFX team.
+            //ex.printStackTrace();
+        }    
+    }
+
+    private void removeExcessDataItems(ObservableList<Data<Number, Number>> list, int numItems,String type) {
+        try {
+            list.remove(0);
+        } catch(NullPointerException ex){
+          //  System.out.println("Remove Data Null Pointer: size=" + list.size()+" over="+numItems);
+          //  ex.printStackTrace();            
+        } catch(UnsupportedOperationException ex){
+            //At some point JavaFX deciceds to add the removed element to a unmodifiable list.
+            //for PermGen and EmptySurvivorSpace
+         //   ex.printStackTrace();            
+        }    
+    }
 }

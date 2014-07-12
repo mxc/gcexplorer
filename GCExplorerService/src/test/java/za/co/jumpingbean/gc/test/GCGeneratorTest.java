@@ -1,7 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * Copyright (C) 2014 Mark Clarke
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package za.co.jumpingbean.gc.test;
 
@@ -26,6 +37,7 @@ import org.hamcrest.Matchers;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import org.junit.Test;
+import za.co.jumpingbean.gc.service.GCExplorerServiceException;
 import za.co.jumpingbean.gc.service.GeneratorService;
 import za.co.jumpingbean.gc.service.JMXQueryRunner;
 import za.co.jumpingbean.gc.service.constants.DESC;
@@ -114,7 +126,7 @@ public class GCGeneratorTest {
 
             List<String> cmdOption = new LinkedList<>();
             cmdOption.add("-XX:+UseConcMarkSweepGC");
-            id = gen.startTestApp("8282", "", "Test", cmdOption);
+            id = gen.startTestApp("8484", "", "Test", cmdOption);
             String output = gen.getProcessOutput(id);
             assertThat(output, is(equalTo("Hello World")));
         } finally {
@@ -125,7 +137,7 @@ public class GCGeneratorTest {
     }
 
     @Test
-    public void testJMXQueryRunnerConcMarkSweepGCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
+    public void testJMXQueryRunnerConcMarkSweepGCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException, GCExplorerServiceException {
         createTmpClassMainClass();
         GeneratorService gen = new GeneratorService();
         List<String> cmdOption = new LinkedList<>();
@@ -133,7 +145,7 @@ public class GCGeneratorTest {
         UUID procId = null;
         try {
 
-            procId = gen.startTestApp("8282", "", "Test", cmdOption);
+            procId = gen.startTestApp("8484", "", "Test", cmdOption);
             JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
             //runner.init();
@@ -143,40 +155,40 @@ public class GCGeneratorTest {
             assertThat(runner.getPermGenSpace(), is(notNullValue()));
             assertThat(runner.getSurvivorSpace(), is(notNullValue()));
             assertThat(runner.getOldGenSpace(), is(notNullValue()));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEMAX).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEMAX).longValue(),
                     is(greaterThanOrEqualTo(-1L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
-                    is(greaterThan(0L)));
-
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEMAX).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEUSED).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEFREE).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEMAX).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEUSED).longValue(),
                     is(Matchers.greaterThanOrEqualTo(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
         } finally {
             if (procId != null) {
@@ -186,14 +198,14 @@ public class GCGeneratorTest {
     }
 
     @Test
-    public void testJMXQueryRunnerSerialGCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
+    public void testJMXQueryRunnerSerialGCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException, GCExplorerServiceException {
         createTmpClassMainClass();
         GeneratorService gen = new GeneratorService();
         UUID procId = null;
         try {
             List<String> cmdOption = new LinkedList<>();
             cmdOption.add("-XX:+UseSerialGC");
-            procId = gen.startTestApp("8282", "", "Test", cmdOption);
+            procId = gen.startTestApp("8484", "", "Test", cmdOption);
             JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
             //runner.init();
@@ -203,40 +215,40 @@ public class GCGeneratorTest {
             assertThat(runner.getPermGenSpace(), is(notNullValue()));
             assertThat(runner.getSurvivorSpace(), is(notNullValue()));
             assertThat(runner.getOldGenSpace(), is(notNullValue()));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEMAX).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEMAX).longValue(),
                     is(greaterThanOrEqualTo(-1L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
-                    is(greaterThan(0L)));
-
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEMAX).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEUSED).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEFREE).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEMAX).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEUSED).longValue(),
                     is(greaterThanOrEqualTo(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
         } finally {
             if (procId != null) {
@@ -247,7 +259,7 @@ public class GCGeneratorTest {
 
     @Test
     public void testJMXQueryRunnerParallelGCQuery() throws IOException, CannotCompileException,
-            NotFoundException, MalformedObjectNameException, IllegalStateException {
+            NotFoundException, MalformedObjectNameException, IllegalStateException, GCExplorerServiceException {
         createTmpClassMainClass();
         GeneratorService gen = new GeneratorService();
         UUID procId = null;
@@ -255,7 +267,7 @@ public class GCGeneratorTest {
 
             List<String> cmdOption = new LinkedList<>();
             cmdOption.add("-XX:+UseParallelGC");
-            procId = gen.startTestApp("8282", "", "Test", cmdOption);
+            procId = gen.startTestApp("8484", "", "Test", cmdOption);
             JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
             //runner.init();
@@ -266,40 +278,40 @@ public class GCGeneratorTest {
             assertThat(runner.getSurvivorSpace(), is(notNullValue()));
             assertThat(runner.getOldGenSpace(), is(notNullValue()));
 
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEMAX).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEMAX).longValue(),
                     is(greaterThanOrEqualTo(-1L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
-                    is(greaterThan(0L)));
-
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEMAX).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEUSED).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEFREE).longValue(),
-                    is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEMAX).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEUSED).longValue(),
                     is(greaterThanOrEqualTo(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEFREE).longValue(),
                     is(greaterThanOrEqualTo(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
         } finally {
             if (procId != null) {
@@ -309,14 +321,14 @@ public class GCGeneratorTest {
     }
 
     @Test
-    public void testJMXQueryRunnerG1GCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException {
+    public void testJMXQueryRunnerG1GCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException, GCExplorerServiceException {
         createTmpClassMainClass();
         GeneratorService gen = new GeneratorService();
         UUID procId = null;
         try {
             List<String> cmdOption = new LinkedList<>();
             cmdOption.add("-XX:+UseG1GC");
-            procId = gen.startTestApp("8282", "", "Test", cmdOption);
+            procId = gen.startTestApp("8484", "", "Test", cmdOption);
             JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
             //runner.init();
@@ -326,40 +338,40 @@ public class GCGeneratorTest {
             assertThat(runner.getPermGenSpace(), is(notNullValue()));
             assertThat(runner.getSurvivorSpace(), is(notNullValue()));
             assertThat(runner.getOldGenSpace(), is(notNullValue()));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEMAX).longValue(),
                     is(greaterThanOrEqualTo(-1L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.EDENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEMAX).longValue(),
                     is(greaterThanOrEqualTo(-1L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEMAX).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEUSED).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEFREE).longValue(),
                     is(greaterThan(0L)));
-            assertThat(gen.getMeasure(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
 
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEMAX).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEMAX).longValue(),
                     is(greaterThanOrEqualTo(-1L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEUSED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEUSED).longValue(),
                     is(greaterThanOrEqualTo(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACEFREE).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEFREE).longValue(),
                     is(greaterThanOrEqualTo(0L)));
-            assertThat(gen.getMeasure(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
                     is(greaterThan(0L)));
         } finally {
             if (procId != null) {

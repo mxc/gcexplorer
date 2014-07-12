@@ -1,9 +1,19 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * Copyright (C) 2014 Mark Clarke
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package za.co.jumpingbean.gc.testApp.test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -31,9 +41,9 @@ public class GCGeneratorAppTest {
             Analiser analiser = Mockito.mock(Analiser.class);
             LocalObjectGenerator localGen = new LocalObjectGenerator(analiser);
             Long start = System.currentTimeMillis();
-            localGen.generate(10, 10, 50, 1000);
+            localGen.generate(10, 10, 50);
             Long end = System.currentTimeMillis();
-            assertThat(((double) end - (double) start), closeTo(1500d, 200d));
+            assertThat(((double) end - (double) start), closeTo(500d, 200d));
         } catch (InterruptedException ex) {
             assertThat("Interrupted Exception", false);
         }
@@ -45,9 +55,9 @@ public class GCGeneratorAppTest {
             Analiser analiser = Mockito.mock(Analiser.class);
             Long start = System.currentTimeMillis();
             LongLivedObjectGenerator gen = new LongLivedObjectGenerator(analiser);
-            gen.generate(10, 10, 50, 1000);
+            gen.generate(10, 10, 50);
             Long end = System.currentTimeMillis();
-            assertThat(((double) end - (double) start), closeTo(1500d, 200d));
+            assertThat(((double) end - (double) start), closeTo(500d, 200d));
         } catch(InterruptedException ex) {
             assertThat("Interrupted Exception", false);
         }
@@ -71,9 +81,9 @@ public class GCGeneratorAppTest {
         LocalObjectGenerator sl = Mockito.mock(LocalObjectGenerator.class);
         GarbageGeneratorApp gen = Mockito.mock(GarbageGeneratorApp.class);
         GCGeneratorMBean bean = new GCGenerator(sl,ll,gen);
-        String result = bean.runLocalObjectCreator(1,1,1,1);
+        String result = bean.runLocalObjectCreator(1,1,1);
         assertThat (result,is("Ok"));
-        result= bean.runLongLivedObjectCreator(1,1,1,1);
+        result= bean.runLongLivedObjectCreator(1,1,1);
         assertThat (result,is("Ok"));
     }    
 }

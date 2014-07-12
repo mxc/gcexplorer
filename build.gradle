@@ -27,6 +27,12 @@ project (':GCExplorerUI'){
         main { 
             output.resourcesDir = "build/classes/main" 
         }
+    }
+    
+    task distJar(type: Jar) {
+        baseName = project.name + '-all'
+        from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+        with jar
     }    
 }
 

@@ -1,12 +1,22 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * Copyright (C) 2014 Mark Clarke
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package za.co.jumpingbean.gcexplorer.model;
 
-import java.sql.Timestamp;
-import java.util.Date;
+import java.util.Formatter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +35,8 @@ import za.co.jumpingbean.gcexplorer.ui.EdenMemoryPool;
  */
 public class UUIDProcess {
 
+    private static int count = 0;
+    private final int number;
     private final UUID id;
     private final EdenMemoryPool edenPool;
     private final SurvivorMemoryPool survivorPool;
@@ -41,6 +53,7 @@ public class UUIDProcess {
     public UUIDProcess(UUID id, EdenMemoryPool edenPool,
             SurvivorMemoryPool survivorPool, EmptySurvivorMemoryPool emptySurvivorMemoryPool, OldGenMemoryPool oldGenPool, PermGenMemoryPool permGenPool, String initParams) {
         this.id = id;
+        number = ++count;
         this.edenPool = edenPool;
         this.survivorPool = survivorPool;
         this.oldGenPool = oldGenPool;
@@ -142,7 +155,7 @@ public class UUIDProcess {
     }
 
     public String getDescription() {
-        return id.toString();
+        return "Proc "+ Integer.toString(this.number);
     }
 
     public UUID getId() {
@@ -201,19 +214,31 @@ public class UUIDProcess {
         return this.getMaxYoungGen() + oldGenPool.getMax().getMeasure();
     }
 
-    public void setSysInfo() {
-        StringBuilder str = new StringBuilder(this.initParams);
-        str.append("\n\rMax Eden:\t\t").append(this.edenPool.getMax().getMeasure());
-        str.append("\n\rMax Survivor:\t\t").append(this.getSurvivorPool().getMax().getMeasure());
-        str.append("\n\rMax Empty Survivor:\t\t").append(this.getEmptySurvivorPool().getMax().getMeasure());
-        str.append("\n\r\t\t---------------");
-        str.append("\n\rYoung Gen Total:\t\t").append(this.getMaxYoungGen());
-        str.append("\n\rMax Old Gen:\t\t").append(this.getOldGenPool().getMax().getMeasure());
-        str.append("\n\r\t\t---------------");
-        str.append("\n\rMax Heap:\t\t").append(this.getMaxHeap());
+    public void setSysInfo(boolean flag) {
+        //hack to force update to textarea text
+        if (flag) {
+            this.sysInfo.set("Updating...");
+        }
+        StringBuilder str = new StringBuilder("Java Version:");
+        String version = System.getProperty("java.version");
+        str.append(version).append("\n\r");
+        str.append(this.initParams).append("\n\r");
+        Formatter pf = new Formatter(str);
+        pf.format("%s %,33.2f", "Max Eden:", this.edenPool.getMax().getMeasure());
+        str.append("\n\r");
+        pf.format("%s %,29.2f", "Max Survivor:", this.survivorPool.getMax().getMeasure());
+        str.append("\n\r");
+        pf.format("%s %,18.2f", "Max Empty Survivor:", this.survivorPool.getMax().getMeasure());
+        str.append("\n\r================================\n\r");
+        pf.format("%s %,23.2f", "Young Gen Total:", this.getMaxYoungGen());
+        str.append("\n\r");
+        pf.format("%s %,36.2f", "Old Gen:", this.oldGenPool.getMax().getMeasure());
+        str.append("\n\r================================\n\r");
+        pf.format("%s %,31.2f", "Heap Total:", this.getMaxHeap());
+
         //force update to display. Seems to not update in some instances
         //TODO Invesitgate!
-        this.sysInfo.set("Updating,...");
+        //this.sysInfo.set("Updating,...");
         this.sysInfo.set(str.toString());
     }
 
@@ -231,6 +256,18 @@ public class UUIDProcess {
 
     private double getMaxYoungGen() {
         return this.getEdenPool().getMax().getMeasure() + this.getSurvivorPool().getMax().getMeasure() * 2;
+    }
+
+    public void updateNumDataPoints(int numDataPoints) {
+        this.edenPool.setNumDataPoints(numDataPoints);
+        this.permGenPool.setNumDataPoints(numDataPoints);
+        this.survivorPool.setNumDataPoints(numDataPoints);
+        this.emptySurvivorPool.setNumDataPoints(numDataPoints);
+        this.oldGenPool.setNumDataPoints(numDataPoints);
+    }
+
+    public int getNumber() {
+        return this.number;
     }
 
 }

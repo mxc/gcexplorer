@@ -1,7 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * Copyright (C) 2014 Mark Clarke
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package za.co.jumpingbean.gc.testApp;
 
@@ -37,8 +48,7 @@ public class LongLivedObjectGenerator {
      * @param methodReturnDelay
      * @throws InterruptedException
      */
-    public void generate(int numInstances, int instanceSize, long creationDelay,
-            long methodReturnDelay) throws InterruptedException {
+    public void generate(int numInstances, int instanceSize, long creationDelay) throws InterruptedException {
         int i = 0;
         try {
             for (i = 1; i <= numInstances; i++) {
@@ -46,9 +56,22 @@ public class LongLivedObjectGenerator {
                 list.add(new TestObject(instanceSize*1024*1024));
                 Thread.sleep(creationDelay);
             }
-            Thread.sleep(methodReturnDelay);
         } finally {
             analiser.decLocalObjectCount(i);
+        }
+    }
+    
+
+    public void releaseLongLived(int numInstances,boolean reverse){
+        if (list.size()<=numInstances){
+            list.clear();
+        }
+        if (reverse){
+            int end = list.size()-1;
+            int start = end=numInstances;
+            list.removeAll(list.subList(start,end));
+        }else{
+            list.removeAll(list.subList(0,(numInstances-1)));
         }
     }
 }
