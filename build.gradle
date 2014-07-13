@@ -2,7 +2,17 @@ subprojects {
     apply plugin: 'java'
     sourceCompatibility = '1.8'
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+    
 
+    
+    ext {
+        vendor = 'Jumping Bean'
+        appversion = '0.1'
+        author = 'Mark Clarke'
+        title = 'GCExplorer'
+        user = System.getenv()['USER']
+    }
+    
     repositories {
         mavenCentral()
     }
@@ -13,12 +23,32 @@ subprojects {
         testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'       
         compile group: 'javax.inject', name: 'javax.inject', version: '1'
     }
+
+    jar {
+        manifest {
+            attributes  'Created-By': author + ' '+  vendor
+            attributes  'Built-By': user
+            attributes  'Build-Date': new Date()
+            attributes  'Implementation-Version': "${appversion}"
+        }
+    }
+
 }
 
 project (':GCExplorerUI'){
     
     project.ext.mainClass = "za.co.jumpingbean.gcexplorer.ui.Main"
+    apply from: 'http://dl.bintray.com/content/shemnon/javafx-gradle/0.4.0/javafx.plugin'    
     
+    ext{ category = 'System'
+        copyright = 'Copyright (c) 2014 Jumping Bean'
+        description = 'A tool for learning about Java memory management.'
+        licenseType = 'GPL v3'
+        vendor = 'Jumping Bean'
+        installSystemWide = true
+        menu = true
+        shortcut = true
+    }
     dependencies {
         compile project (':GCExplorerService')
     }
@@ -29,11 +59,13 @@ project (':GCExplorerUI'){
         }
     }
     
-    task distJar(type: Jar) {
-        baseName = project.name + '-all'
-        from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-        with jar
-    }    
+    jar {
+        manifest {
+            attributes  'Main-Class': 'za.co.jumpingbean.gcexplorer.ui.Main'
+            attributes  'Implementation-Title': title
+        }   
+    }
+
 }
 
 
@@ -45,14 +77,15 @@ project (':GCExplorerService'){
         testCompile group: 'org.javassist', name: 'javassist', version: '3.18.2-GA'
     }
     
-    //project.ext.mainClass="za.co.jumpingbean.gc.GeneratorService"
+    jar {
+        manifest {
+            attributes  'Implementation-Title': 'GCExplorerService'
+        }
+    }
     
 }
 
 project (':GarbageGeneratorApp'){
-    dependencies {
-        compile group: 'com.codahale.metrics', name: 'metrics-core', version:'3.0.1'
-    }
 
     jar {
         from {
@@ -62,6 +95,7 @@ project (':GarbageGeneratorApp'){
         }
         manifest {
             attributes "Main-Class":  "za.co.jumpingbean.gc.Generator"
+            attributes  'Implementation-Title': 'GarbageGeneratorApp'
         }
     }
 

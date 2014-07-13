@@ -23,8 +23,15 @@ package za.co.jumpingbean.gc.testApp;
 class TestObject {
     
     private byte bytes [];
+    private int size;
     public TestObject(int size){
         bytes = new byte[size];
+        this.size=size/1024/1024;
     }
+
+    public int getSize() {
+        return size;
+    }
+    
     
 }

@@ -28,6 +28,10 @@ public interface GCGeneratorMBean {
 
     public void releaseLongLivedObjects(int numInstances, boolean reverse);
 
+    public int getLongLivedObjectsCount();
+    
+    public int getLongLivedObjectsMemorySize();
+    
     public void shutDown();
 
     public boolean isRunning();

@@ -16,8 +16,11 @@
  */
 package za.co.jumpingbean.gcexplorer.ui;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -215,8 +218,20 @@ public class ProcessController implements Runnable {
         UUID procId;
         String tmpPort = port.toString();
         port++;
-        procId = gen.startTestApp(tmpPort, "/home/mark/Projects/gcexplorer/GarbageGeneratorApp"
-                + "/build/libs/GarbageGeneratorApp.jar",
+        //Get current classpath
+        StringBuffer buffer = new StringBuffer();
+        for (URL url
+                : ((URLClassLoader) (Thread.currentThread()
+                .getContextClassLoader())).getURLs()) {
+            buffer.append(new File(url.getPath()));
+            buffer.append(System.getProperty("path.separator"));
+        }
+        String classpath = buffer.toString();
+        int toIndex = classpath
+                .lastIndexOf(System.getProperty("path.separator"));
+        classpath = classpath.substring(0, toIndex);
+
+        procId = gen.startTestApp(tmpPort, classpath,
                 "za.co.jumpingbean.gc.testApp.GarbageGeneratorApp", gcOptions);
         synchronized (liveProcesses) {
             this.liveProcesses.put(procId, ProcessFactory.newProcess(procId, gcOptions.toString()));
@@ -322,24 +337,24 @@ public class ProcessController implements Runnable {
 
     void updateNumberOfDataPoints(int numDataPoints) {
         synchronized (liveProcesses) {
-                for(UUIDProcess proc : liveProcesses.values()){
-                    proc.updateNumDataPoints(numDataPoints);
-                }
+            for (UUIDProcess proc : liveProcesses.values()) {
+                proc.updateNumDataPoints(numDataPoints);
+            }
         }
     }
 
     public int getNumber(UUID procId) {
-        synchronized(liveProcesses){
-            if (liveProcesses.get(procId)!=null){
+        synchronized (liveProcesses) {
+            if (liveProcesses.get(procId) != null) {
                 return liveProcesses.get(procId).getNumber();
-            }else{
+            } else {
                 return 0;
             }
         }
-        
+
     }
 
-    void releaseLongLivedInstances(UUID id,int numInstances, boolean reverse) {
+    void releaseLongLivedInstances(UUID id, int numInstances, boolean reverse) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {

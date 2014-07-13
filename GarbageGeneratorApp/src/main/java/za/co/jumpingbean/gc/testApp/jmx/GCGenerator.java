@@ -88,4 +88,14 @@ public class GCGenerator implements GCGeneratorMBean {
             longLivedGenerator.releaseLongLived(numInstances, reverse);
     }
 
+    @Override
+    public int getLongLivedObjectsCount() {
+        return longLivedGenerator.getObjectCount();
+    }
+
+    @Override
+    public int getLongLivedObjectsMemorySize() {
+        return longLivedGenerator.getApproximateMemoryOccupied();
+    }
+
 }

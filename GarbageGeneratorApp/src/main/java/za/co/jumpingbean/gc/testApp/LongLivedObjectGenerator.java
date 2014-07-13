@@ -17,8 +17,9 @@
 package za.co.jumpingbean.gc.testApp;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import za.co.jumpingbean.gc.testApp.Analiser;
+
 /**
  *
  * @author mark
@@ -26,11 +27,10 @@ import za.co.jumpingbean.gc.testApp.Analiser;
 public class LongLivedObjectGenerator {
 
     private List<TestObject> list;
-    private Analiser analiser;
+    private int size = 0;
 
-    public LongLivedObjectGenerator(Analiser analiser) {
+    public LongLivedObjectGenerator() {
         list = new ArrayList<>();
-        this.analiser = analiser;
     }
 
     /**
@@ -45,33 +45,52 @@ public class LongLivedObjectGenerator {
      * @param numInstances
      * @param instanceSize
      * @param creationDelay
-     * @param methodReturnDelay
      * @throws InterruptedException
      */
     public void generate(int numInstances, int instanceSize, long creationDelay) throws InterruptedException {
         int i = 0;
-        try {
+        synchronized (list) {
             for (i = 1; i <= numInstances; i++) {
-                analiser.incLocalObjectCount();
-                list.add(new TestObject(instanceSize*1024*1024));
+                list.add(new TestObject(instanceSize * 1024 * 1024));
+                size += instanceSize;
                 Thread.sleep(creationDelay);
             }
-        } finally {
-            analiser.decLocalObjectCount(i);
         }
     }
-    
 
-    public void releaseLongLived(int numInstances,boolean reverse){
-        if (list.size()<=numInstances){
-            list.clear();
+    public void releaseLongLived(int numInstances, boolean reverse) {
+        synchronized (list) {
+            if (list.size() <= numInstances) {
+                list.clear();
+                size = 0;
+            }
+            List<TestObject> subList;
+            if (reverse) {
+                int end = list.size()-1;
+                int start = end +1 - numInstances;
+                subList=new ArrayList<>();
+                for (int j=start;j<=end;j++){
+                    subList.add(list.get(j));
+                }
+            } else {
+                subList = list.subList(0, (numInstances));
+            }
+            int tmpSize = 0;
+            for (TestObject obj : subList) {
+                tmpSize += obj.getSize();
+            }
+            size -= tmpSize;
+            list.removeAll(subList);
         }
-        if (reverse){
-            int end = list.size()-1;
-            int start = end=numInstances;
-            list.removeAll(list.subList(start,end));
-        }else{
-            list.removeAll(list.subList(0,(numInstances-1)));
+    }
+
+    public int getObjectCount() {
+        synchronized (list) {
+            return this.list.size();
         }
+    }
+
+    public int getApproximateMemoryOccupied() {
+        return this.size;
     }
 }

@@ -18,7 +18,6 @@ package za.co.jumpingbean.gc.testApp;
 
 
 import za.co.jumpingbean.gc.testApp.jmx.GCGenerator;
-import com.codahale.metrics.MetricRegistry;
 import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,9 +45,9 @@ public class GarbageGeneratorApp {
     public GarbageGeneratorApp() {
         server = ManagementFactory.getPlatformMBeanServer();
         System.out.println("Starting up a new GC Generator App");
-        Analiser analiser = new Analiser(new MetricRegistry());
-        LocalObjectGenerator sl = new LocalObjectGenerator(analiser);
-        LongLivedObjectGenerator ll = new LongLivedObjectGenerator(analiser);
+        //Analiser analiser = new Analiser(new MetricRegistry());
+        LocalObjectGenerator sl = new LocalObjectGenerator();
+        LongLivedObjectGenerator ll = new LongLivedObjectGenerator();
 
         bean = new GCGenerator(sl, ll, this);
         try {
