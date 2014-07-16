@@ -38,6 +38,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.stage.Stage;
+import za.co.jumpingbean.gcexplorer.model.Utils;
 
 /**
  *
@@ -108,10 +110,10 @@ public class LaunchProcessDialog implements Initializable {
     @FXML
     private RadioButton rdbUseParNewGC;
 
-    private final Main app;
+    private final GCExplorer app;
     private final MainForm parent;
 
-    public LaunchProcessDialog(Main app, MainForm parent) {
+    public LaunchProcessDialog(GCExplorer app, MainForm parent) {
         this.app = app;
         this.parent = parent;
     }
@@ -131,7 +133,7 @@ public class LaunchProcessDialog implements Initializable {
         } catch (IOException |
                 IllegalStateException |
                 NullPointerException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GCExplorer.class.getName()).log(Level.SEVERE, null, ex);
             StringBuilder str = new StringBuilder("Error launching process: ");
             str.append(ex.getMessage());
             txtStatus.setText(str.toString());
@@ -146,17 +148,10 @@ public class LaunchProcessDialog implements Initializable {
         strBuilder.append(selectedGC);
         txtStatus.setText(strBuilder.toString());
 
-        FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("processView.fxml")
-        );
-        ProcessViewForm controller = new ProcessViewForm(app, procId);
-        loader.setController(controller);
-        Parent pane;
         try {
-            pane = loader.load();
-            this.parent.addTab(pane, procId, controller);
+            parent.addPane(procId,false);
+            ((Stage)this.btnLaunch.getScene().getWindow()).close();
         } catch (IOException ex) {
-            Logger.getLogger(LaunchProcessDialog.class.getName()).log(Level.SEVERE, null, ex);
             String txt = txtStatus.getText();
             txtStatus.setText(txt + "\n\rThere was an error adding tab to display");
         }
@@ -256,24 +251,24 @@ public class LaunchProcessDialog implements Initializable {
             }
 
         });
-        
-        rdbUseAdaptiveSizePolicy.setOnAction(new EventHandler(){
+
+        rdbUseAdaptiveSizePolicy.setOnAction(new EventHandler() {
 
             @Override
             public void handle(Event event) {
-                   if (rdbUseAdaptiveSizePolicy.isSelected() && !rdbUseAdaptiveSizePolicy.isDisabled()){
-                       txtNewRatio.disableProperty().set(true);
-                       txtMaxNewSize.disableProperty().set(true);
-                       txtNewSize.disableProperty().set(true);
-                       txtSurvivorRatio.disableProperty().set(true);
-                   }else{
-                       txtNewRatio.disableProperty().set(false);
-                       txtMaxNewSize.disableProperty().set(false);
-                       txtNewSize.disableProperty().set(false);
-                       txtSurvivorRatio.disableProperty().set(false);
-                   }
+                if (rdbUseAdaptiveSizePolicy.isSelected() && !rdbUseAdaptiveSizePolicy.isDisabled()) {
+                    txtNewRatio.disableProperty().set(true);
+                    txtMaxNewSize.disableProperty().set(true);
+                    txtNewSize.disableProperty().set(true);
+                    txtSurvivorRatio.disableProperty().set(true);
+                } else {
+                    txtNewRatio.disableProperty().set(false);
+                    txtMaxNewSize.disableProperty().set(false);
+                    txtNewSize.disableProperty().set(false);
+                    txtSurvivorRatio.disableProperty().set(false);
+                }
             }
-            
+
         });
 
         this.btnLaunch.setOnAction(this::launchProcess);
@@ -314,7 +309,7 @@ public class LaunchProcessDialog implements Initializable {
         ArrayList<String> list = new ArrayList<>();
         StringBuilder errorMsg = new StringBuilder();
 
-       this.addTextFieldOptionBetween(txtCMSInitiatingOccupancyFraction, "-XX:CMSInitiatingOccupancyFraction="
+        this.addTextFieldOptionBetween(txtCMSInitiatingOccupancyFraction, "-XX:CMSInitiatingOccupancyFraction="
                 + txtCMSInitiatingOccupancyFraction.getText(), "CMSInitiatingOccupancyFraction", 0, 100, list, errorMsg);
 
         this.addTextFieldOption(txtCMSTriggerPermRatio, "-XX:CMSTriggerPermRatio="
@@ -350,7 +345,7 @@ public class LaunchProcessDialog implements Initializable {
         int tmpMax = 0;
         if (!txtMaxTenuringThreshold.getText().isEmpty()) {
             try {
-                String text= txtMaxTenuringThreshold.getText();
+                String text = txtMaxTenuringThreshold.getText();
                 tmpMax = Integer.parseInt(text);
                 tmpMax = tmpMax > 15 ? 15 : tmpMax;
             } catch (NumberFormatException ex) {

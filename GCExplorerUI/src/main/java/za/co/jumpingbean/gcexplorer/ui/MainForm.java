@@ -76,6 +76,8 @@ public class MainForm implements Initializable {
     @FXML
     private MenuItem mnuAbout;
     @FXML
+    private MenuItem mnuAttachToExisting;
+    @FXML
     private TableView<UUIDProcess> tblDetails;
     @FXML
     private ToggleGroup unitGroup;
@@ -128,12 +130,12 @@ public class MainForm implements Initializable {
     @FXML
     private TabPane tabPane;
 
-    private final Main app;
+    private final GCExplorer app;
     private int numDataPoints = 40;
 
     private ObservableList<UUIDProcess> processData = FXCollections.observableArrayList(new ArrayList<>());
 
-    MainForm(ProcessController statsCollector, Main app) {
+    MainForm(ProcessController statsCollector, GCExplorer app) {
         this.app = app;
     }
 
@@ -164,10 +166,31 @@ public class MainForm implements Initializable {
         }
     }
 
+    protected void attachToProcess(ActionEvent e) {
+        try {
+            Stage stage = new Stage();
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("attachExistingProcess.fxml")
+            );
+            loader.setController(new AttachExistingProcessDialog(app, this));
+            Parent pane = loader.load();
+            stage.setScene(new Scene(pane));
+            stage.setTitle("Attach to Process");
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initOwner(this.tblDetails.getParent().getScene().getWindow());
+            stage.initStyle(StageStyle.UTILITY);
+            stage.show();
+        } catch (IOException ex) {
+            Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         this.mnuNewProcess.setOnAction(this::newProcess);
         this.mnuNumDataPoints.setOnAction(this::showNumDataPointsDialog);
+        this.mnuAttachToExisting.setOnAction(this::attachToProcess);
+
         this.mnuAbout.setOnAction(this::showAboutDialog);
         this.rdbB.setOnAction(this::changeUnits);
         this.rdbKB.setOnAction(this::changeUnits);
@@ -227,7 +250,26 @@ public class MainForm implements Initializable {
 
     }
 
-    void addTab(Parent pane, UUID procId ,ProcessViewForm controller) {
+    public void addPane(UUID procId, boolean disableGeneratorButton) throws IOException {
+        FXMLLoader loader = new FXMLLoader(
+                ProcessViewForm.class.getResource("processView.fxml")
+        );
+        ProcessViewForm controller = new ProcessViewForm(app, procId);
+        if (disableGeneratorButton) {
+            controller.disableGenerateObjectsButton();
+        }
+        loader.setController(controller);
+        Parent pane;
+        try {
+            pane = loader.load();
+            this.addTab(pane, procId, controller);
+        } catch (IOException ex) {
+            throw new IOException("There was an error adding tab to the main display");
+        }
+
+    }
+
+    private void addTab(Parent pane, UUID procId, ProcessViewForm controller) {
         Tab tab = new Tab();
         tab.setUserData(procId);
         //tab.setUserData(controller);
@@ -241,7 +283,7 @@ public class MainForm implements Initializable {
 
             }
         });
-        tab.setText("Proc "+ app.getProcessController().getNumber(procId));
+        tab.setText("Proc " + app.getProcessController().getNumber(procId));
         tab.setContent(pane);
         tabPane.getTabs().add(tab);
         this.processData.add(this.app.getProcessController().getUUIDProcess(procId));

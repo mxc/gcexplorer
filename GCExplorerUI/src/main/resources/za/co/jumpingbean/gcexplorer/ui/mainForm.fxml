@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
 Copyright (C) 2014 Mark Clarke
 
@@ -29,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     <menus>
                         <Menu mnemonicParsing="false" text="Main">
                             <items>
-                                <MenuItem fx:id="mnuNewProcess" mnemonicParsing="false" text="New Process" /><MenuItem fx:id="mnuNumDataPoints" mnemonicParsing="false" text="Number of Data Points" />
+                                <MenuItem fx:id="mnuNewProcess" mnemonicParsing="false" text="Launch Test App" /><MenuItem fx:id="mnuAttachToExisting" mnemonicParsing="false" text="Attach to Existing Process" /><MenuItem fx:id="mnuNumDataPoints" mnemonicParsing="false" text="Number of Data Points" />
                                 <MenuItem mnemonicParsing="false" text="Close" />
                             </items>
                         </Menu>

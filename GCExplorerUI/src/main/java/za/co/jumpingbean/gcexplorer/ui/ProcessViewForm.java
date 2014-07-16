@@ -77,7 +77,7 @@ public class ProcessViewForm implements Initializable {
     @FXML
     private TextArea txtGeneratorStatus;
 
-    private final Main app;
+    private final GCExplorer app;
     private final UUID procId;
     @FXML
     private StackedBarChart<String, Number> chtStackedBarTotalMemory;
@@ -90,7 +90,7 @@ public class ProcessViewForm implements Initializable {
     @FXML
     private StackedAreaChart<Number, Number> chtStackedAreaTotalMemory;
 
-    public ProcessViewForm(Main app, UUID procId) {
+    public ProcessViewForm(GCExplorer app, UUID procId) {
         this.procId = procId;
         this.app = app;
     }
@@ -156,6 +156,11 @@ public class ProcessViewForm implements Initializable {
         lblGCInfo.setText("Updating...");
 }
 
+    public void disableGenerateObjectsButton(){
+        this.btnGenerateGarbageOptions.disableProperty().setValue(Boolean.TRUE);
+        this.txtGeneratorStatus.disableProperty().setValue(Boolean.TRUE);
+    }
+    
     private void showGarbageOptionsForm(ActionEvent e) {
         Stage stage = new Stage();
         try {

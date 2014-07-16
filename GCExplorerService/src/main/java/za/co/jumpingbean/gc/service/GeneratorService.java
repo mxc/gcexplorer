@@ -19,7 +19,6 @@ package za.co.jumpingbean.gc.service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +29,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.management.remote.JMXServiceURL;
 import za.co.jumpingbean.gc.service.constants.DESC;
+import za.co.jumpingbean.gc.testApp.GarbageGeneratorApp;
 
 public class GeneratorService {
 
@@ -44,12 +45,47 @@ public class GeneratorService {
     public UUID startTestApp(String port, String classPath, String mainClass, List<String> gcOptions)
             throws IllegalStateException, IOException {
         ProcessParams params;
+
         if (gcOptions == null) {
             params = new ProcessParams(port, classPath, mainClass);
         } else {
             params = new ProcessParams(port, classPath, mainClass, gcOptions);
         }
         return this.startTestApp(params);
+    }
+
+    public UUID connectToJavaProcess(String url) throws IOException {
+        try {
+            ProcessObject procObj = new ProcessObject(
+                    GarbageGeneratorApp.class.getCanonicalName(),
+                    JMXQueryRunner.createJMXQueryRunner(new JMXServiceURL(url)));
+            try {
+                wlock.lock();
+                processes.put(procObj.getId(), procObj);
+            } finally {
+                wlock.unlock();
+            }
+            return procObj.getId();
+        } catch (IOException ex) {
+            throw ex;
+        }
+    }
+
+    public UUID connectToJavaProcess(int pid) throws IOException {
+        try {
+            ProcessObject procObj = new ProcessObject(
+                    GarbageGeneratorApp.class.getCanonicalName(),
+                    JMXQueryRunner.createJMXQueryRunner(pid));
+            try {
+                wlock.lock();
+                processes.put(procObj.getId(), procObj);
+            } finally {
+                wlock.unlock();
+            }
+            return procObj.getId();
+        } catch (IOException ex) {
+            throw ex;
+        }
     }
 
     public UUID startTestApp(ProcessParams params) throws IllegalStateException, IOException {
@@ -79,7 +115,7 @@ public class GeneratorService {
                         proc.getErrorStream()));
                 StringBuilder str = new StringBuilder(error.readLine());
                 String tmp;
-                while ((tmp=error.readLine())!=null){
+                while ((tmp = error.readLine()) != null) {
                     str.append(tmp);
                 }
                 throw new IllegalStateException("Error starting process: " + str.toString());
@@ -105,8 +141,9 @@ public class GeneratorService {
             ProcOutputReaderList outputList = new ProcOutputReaderList(proc, reader);
             outputList.init();
             try {
-                ProcessObject procObj = new ProcessObject(proc, params,
-                        JMXQueryRunner.createJXMQueryRunner(params.getPort()), outputList);
+                ControlableProcess procObj = new ControlableProcess(
+                        GarbageGeneratorApp.class.getCanonicalName(), proc, params,
+                        outputList, JMXQueryRunner.createJMXQueryRunner(params.getPort()));
                 try {
                     wlock.lock();
                     processes.put(procObj.getId(), procObj);
@@ -128,8 +165,10 @@ public class GeneratorService {
     public void stopTestApp(UUID id) {
         try {
             wlock.lock();
-            processes.get(id).stop();
-            processes.remove(id);
+            if (isControlableProcess(id)) {
+                ((ControlableProcess) processes.get(id)).stop();
+                processes.remove(id);
+            }
         } finally {
             wlock.unlock();
         }
@@ -139,7 +178,9 @@ public class GeneratorService {
         try {
             wlock.lock();
             for (ProcessObject proc : processes.values()) {
-                proc.stop();
+                if (isControlableProcess(proc.getId())) {
+                    ((ControlableProcess) proc).stop();
+                }
             }
             processes.clear();
         } finally {
@@ -159,7 +200,11 @@ public class GeneratorService {
     public ProcessParams getProcessParams(UUID id) {
         try {
             rlock.lock();
-            return this.processes.get(id).getParams();
+            if (this.isControlableProcess(id)) {
+                return ((ControlableProcess) this.processes.get(id)).getParams();
+            } else {
+                return new ProcessParams("", "", "");
+            }
         } finally {
             rlock.unlock();
         }
@@ -168,7 +213,11 @@ public class GeneratorService {
     public String getProcessOutput(UUID id) {
         try {
             rlock.lock();
-            return this.processes.get(id).readProcessOutputLine();
+            if (isControlableProcess(id)) {
+                return ((ControlableProcess) this.processes.get(id)).readProcessOutputLine();
+            } else {
+                return "";
+            }
         } finally {
             rlock.unlock();
         }
@@ -178,7 +227,7 @@ public class GeneratorService {
         Number result = 0;
         try {
             rlock.lock();
-            if (processes.get(id)==null){
+            if (processes.get(id) == null) {
                 throw new GCExplorerServiceException("Process has been removed");
             }
             switch (desc) {
@@ -250,19 +299,27 @@ public class GeneratorService {
     }
 
     public void genLocalInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
-            processes.get(id).getQry().getGCGenerator().runLocalObjectCreator(numInstances,instanceSize,creationPauseTime);
+        processes.get(id).getQry().getGCGenerator().runLocalObjectCreator(numInstances, instanceSize, creationPauseTime);
     }
 
     public void genLongLivedInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
-            processes.get(id).getQry().getGCGenerator().runLongLivedObjectCreator(numInstances,instanceSize,creationPauseTime);
+        processes.get(id).getQry().getGCGenerator().runLongLivedObjectCreator(numInstances, instanceSize, creationPauseTime);
     }
 
     public void releaseLongLivedInstances(UUID id, int numInstances, boolean reverse) {
-            processes.get(id).getQry().getGCGenerator().releaseLongLivedObjects(numInstances,reverse);
+        processes.get(id).getQry().getGCGenerator().releaseLongLivedObjects(numInstances, reverse);
     }
-    
+
     public String getGCInfo(UUID procId) {
-       return  processes.get(procId).getQry().getGCInfo();
+        return processes.get(procId).getQry().getGCInfo();
+    }
+
+    private boolean isControlableProcess(UUID id) {
+        return processes.get(id) instanceof ControlableProcess;
+    }
+
+    public List<String> getLocalProcessesList() {
+            return LocalJavaProcessFinder.getLocalJavaProcesses();
     }
 
 }

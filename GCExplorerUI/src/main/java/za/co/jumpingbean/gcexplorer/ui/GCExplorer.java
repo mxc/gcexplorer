@@ -27,13 +27,13 @@ import javafx.stage.Stage;
  *
  * @author mark
  */
-public class Main extends Application {
+public class GCExplorer extends Application {
 
     private ProcessController processController;
     private Units units = Units.MB;
     
     public static void main(String[] args) {
-        launch(Main.class, args);
+        launch(GCExplorer.class, args);
     }
 
     public Units getUnits() {
@@ -59,7 +59,7 @@ public class Main extends Application {
         loader.setController(new MainForm(processController,this));
         Parent pane = loader.load();
         Scene scene = new Scene(pane, 800, 600);
-        primaryStage.setTitle("GE Explorer");
+        primaryStage.setTitle("GC Explorer");
         primaryStage.setScene(scene);
         primaryStage.getIcons().add(new Image(this.getClass().getResourceAsStream("gcExplorer.png")));
         primaryStage.show();

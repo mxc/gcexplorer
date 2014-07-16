@@ -16,10 +16,14 @@
  */
 package za.co.jumpingbean.gc.test;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -29,6 +33,7 @@ import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
 import javassist.NotFoundException;
 import javax.management.MalformedObjectNameException;
+import javax.management.remote.JMXServiceURL;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -40,6 +45,7 @@ import org.junit.Test;
 import za.co.jumpingbean.gc.service.GCExplorerServiceException;
 import za.co.jumpingbean.gc.service.GeneratorService;
 import za.co.jumpingbean.gc.service.JMXQueryRunner;
+import za.co.jumpingbean.gc.service.LocalJavaProcessFinder;
 import za.co.jumpingbean.gc.service.constants.DESC;
 import za.co.jumpingbean.gc.service.constants.EdenSpace;
 import za.co.jumpingbean.gc.service.constants.OldGenerationCollector;
@@ -321,6 +327,158 @@ public class GCGeneratorTest {
     }
 
     @Test
+    public void testJMXConnectionToLocalProcess() throws IOException, GCExplorerServiceException {
+        Process p = Runtime.getRuntime().exec("jconsole");
+        try {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GCGeneratorTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            List<String> procs = LocalJavaProcessFinder.getLocalJavaProcesses();
+            assertThat(procs.size(), greaterThan(0));
+            String strPID = null;
+            for (String proc : procs) {
+                String[] items = proc.split(" ");
+                if (items[1].contains("JConsole")) {
+                    strPID = items[0];
+                    break;
+                }
+            }
+            if (strPID == null) {
+                p.destroy();
+                throw new GCExplorerServiceException("No suitable java process found.");
+
+            }
+            int pid = Integer.parseInt(strPID);
+            GeneratorService gen = new GeneratorService();
+            UUID procId = gen.connectToJavaProcess(pid);
+            JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
+
+            //runner.init();
+            assertThat(runner.getOldGenCollector(), is(notNullValue()));
+            assertThat(runner.getYoungGenCollector(), is(notNullValue()));
+            assertThat(runner.getEdenSpace(), is(notNullValue()));
+            assertThat(runner.getPermGenSpace(), is(notNullValue()));
+            assertThat(runner.getSurvivorSpace(), is(notNullValue()));
+            assertThat(runner.getOldGenSpace(), is(notNullValue()));
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEMAX).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEUSED).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEFREE).longValue(),
+                    is(greaterThan(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                    is(greaterThanOrEqualTo(-1L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEUSED).longValue(),
+                    is(greaterThanOrEqualTo(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEFREE).longValue(),
+                    is(greaterThanOrEqualTo(0L)));
+            assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+                    is(greaterThan(0L)));
+        } finally {
+            p.destroy();
+        }
+    }
+    
+    
+    @Test
+    public void testJMXConnectionToRemoteProcess() throws IOException,
+            GCExplorerServiceException, CannotCompileException, NotFoundException {
+        try {
+            createTmpClassMainClass();
+            GeneratorService gen = new GeneratorService();
+            List<String> cmd = new LinkedList<>();
+            cmd.add("java");
+            cmd.add("-Dcom.sun.management.jmxremote");
+            cmd.add("-Dcom.sun.management.jmxremote.port=8888");
+            cmd.add("-Dcom.sun.management.jmxremote.ssl=false");
+            cmd.add("-Dcom.sun.management.jmxremote.authenticate=false");
+            cmd.add("-Djava.rmi.server.hostname=127.0.0.1");
+            cmd.add("Test");
+            ProcessBuilder procBuilder = new ProcessBuilder(cmd);
+            Process proc = procBuilder.start();
+            BufferedReader rd = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+            if (!proc.isAlive()) {
+                String error = rd.readLine();
+            }
+            Thread.sleep(1000L);
+            try {
+                UUID procId = gen.connectToJavaProcess("service:jmx:rmi:///jndi/rmi://127.0.0.1:8888/jmxrmi");
+                JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
+
+                //runner.init();
+                assertThat(runner.getOldGenCollector(), is(notNullValue()));
+                assertThat(runner.getYoungGenCollector(), is(notNullValue()));
+                assertThat(runner.getEdenSpace(), is(notNullValue()));
+                assertThat(runner.getPermGenSpace(), is(notNullValue()));
+                assertThat(runner.getSurvivorSpace(), is(notNullValue()));
+                assertThat(runner.getOldGenSpace(), is(notNullValue()));
+                assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEMAX).longValue(),
+                        is(greaterThanOrEqualTo(-1L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEUSED).longValue(),
+                        is(greaterThan(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACEFREE).longValue(),
+                        is(greaterThan(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.EDENSPACECOMMITTED).longValue(),
+                        is(greaterThan(0L)));
+
+                assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEMAX).longValue(),
+                        is(greaterThanOrEqualTo(-1L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEUSED).longValue(),
+                        is(greaterThan(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACEFREE).longValue(),
+                        is(greaterThan(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.PERMGENSPACECOMMITTED).longValue(),
+                        is(greaterThan(0L)));
+
+                assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEMAX).longValue(),
+                        is(greaterThan(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEUSED).longValue(),
+                        is(greaterThan(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACEFREE).longValue(),
+                        is(greaterThan(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.OLDGENSPACECOMMITTED).longValue(),
+                        is(greaterThan(0L)));
+
+                assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEMAX).longValue(),
+                        is(greaterThanOrEqualTo(-1L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEUSED).longValue(),
+                        is(greaterThanOrEqualTo(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACEFREE).longValue(),
+                        is(greaterThanOrEqualTo(0L)));
+                assertThat(gen.queryJMXForValue(procId, DESC.SURVIVORSPACECOMMITTED).longValue(),
+                        is(greaterThan(0L)));
+            } finally {
+                proc.destroyForcibly();
+            }
+        } catch (InterruptedException ex) {
+            Logger.getLogger(GCGeneratorTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Test
     public void testJMXQueryRunnerG1GCQuery() throws IOException, CannotCompileException, NotFoundException, MalformedObjectNameException, GCExplorerServiceException {
         createTmpClassMainClass();
         GeneratorService gen = new GeneratorService();
@@ -398,7 +556,7 @@ public class GCGeneratorTest {
                     + "Byte[]arr = new Byte[1000];"
                     + "System.out.println(\"Hello World\");"
                     + "try {"
-                    + "    Thread.sleep(1000L);"
+                    + "    Thread.sleep(2000L);"
                     + "} catch (InterruptedException ex1) {"
                     + "}"
                     + "}";

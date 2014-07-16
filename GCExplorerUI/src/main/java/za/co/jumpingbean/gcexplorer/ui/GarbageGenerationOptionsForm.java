@@ -36,6 +36,7 @@ import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import za.co.jumpingbean.gcexplorer.model.Utils;
 
 /**
  *
@@ -60,11 +61,11 @@ public class GarbageGenerationOptionsForm implements Initializable {
     @FXML
     private CheckBox chkReverse;
 
-    private final Main app;
+    private final GCExplorer app;
     private final UUID procId;
     private final ProcessViewForm parent;
 
-    GarbageGenerationOptionsForm(Main app, UUID procId, ProcessViewForm form) {
+    GarbageGenerationOptionsForm(GCExplorer app, UUID procId, ProcessViewForm form) {
         this.app = app;
         this.procId = procId;
         this.parent = form;
@@ -88,7 +89,7 @@ public class GarbageGenerationOptionsForm implements Initializable {
             str.append("Objects:\t").append(numInstances).append("\n\r");
             parent.setGenStatus(str.toString());
         } catch (NumberFormatException ex) {
-            createPopup("All inputs must be integers");
+            Utils.createPopup("All inputs must be integers",txtCreationPauseTime.getScene().getWindow());
         }
     }
 
@@ -98,11 +99,13 @@ public class GarbageGenerationOptionsForm implements Initializable {
             int instanceSize = Integer.parseInt(txtInstanceSize.getText());
             int creationPauseTime = Integer.parseInt(txtCreationPauseTime.getText());
             if (numInstances * instanceSize > 1000) {
-                createPopup("You will use " + numInstances * instanceSize + " MB of memory");
+                Utils.createPopup("You will use " + numInstances * instanceSize + " MB of memory",
+                        txtCreationPauseTime.getScene().getWindow());
             }
             int totalSeconds = numInstances * creationPauseTime / 1000;
             if (totalSeconds > 180) {
-                createPopup("This will take " + totalSeconds + " seconds to complete");
+                Utils.createPopup("This will take " + totalSeconds + " seconds to complete",
+                        txtCreationPauseTime.getScene().getWindow());
             }
             app.getProcessController().genLocalInstances(procId, numInstances, instanceSize, creationPauseTime);
             ((Stage) txtNumInstances.getScene().getWindow()).close();
@@ -112,7 +115,8 @@ public class GarbageGenerationOptionsForm implements Initializable {
             str.append("Creation Pause (ms):\t").append(creationPauseTime).append("\n\r");
             parent.setGenStatus(str.toString());
         } catch (NumberFormatException ex) {
-            createPopup("All inputs must be integers");
+            Utils.createPopup("All inputs must be integers",
+                    txtCreationPauseTime.getScene().getWindow());
         }
     }
 
@@ -129,33 +133,7 @@ public class GarbageGenerationOptionsForm implements Initializable {
             str.append("Creation Pause (ms):\t").append(creationPauseTime).append("\n\r");
             parent.setGenStatus(str.toString());
         } catch (NumberFormatException ex) {
-            createPopup("All inputs must be integers.");
+            Utils.createPopup("All inputs must be integers.",txtCreationPauseTime.getScene().getWindow());
         }
-    }
-
-    private void createPopup(String msg) {
-        Stage stage = new Stage();
-        VBox box = new VBox();
-        box.setPadding(new Insets(10));
-        box.setAlignment(Pos.CENTER);
-        Label label = new Label(msg);
-        label.setMaxWidth(200);
-        label.setWrapText(true);
-        Button btnOk = new Button("Ok");
-        btnOk.setOnAction(new EventHandler() {
-
-            @Override
-            public void handle(Event event) {
-                stage.close();
-            }
-
-        });
-        box.getChildren().add(label);
-        box.getChildren().add(btnOk);
-        stage.setScene(new Scene(box));
-        stage.initOwner(txtCreationPauseTime.getScene().getWindow());
-        stage.initStyle(StageStyle.UTILITY);
-        stage.initModality(Modality.WINDOW_MODAL);
-        stage.show();
     }
 }

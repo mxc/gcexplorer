@@ -3,8 +3,6 @@ subprojects {
     sourceCompatibility = '1.8'
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
     
-
-    
     ext {
         vendor = 'Jumping Bean'
         appversion = '0.1'
@@ -37,31 +35,33 @@ subprojects {
 
 project (':GCExplorerUI'){
     
-    project.ext.mainClass = "za.co.jumpingbean.gcexplorer.ui.Main"
     apply from: 'http://dl.bintray.com/content/shemnon/javafx-gradle/0.4.0/javafx.plugin'    
     
-    ext{ category = 'System'
-        copyright = 'Copyright (c) 2014 Jumping Bean'
+    javafx{ 
+        mainClass = "za.co.jumpingbean.gcexplorer.ui.GCExplorer"    
+        category = 'System'
+        copyright = 'Copyright (c) 2014 Mark Clarke Jumping Bean'
         description = 'A tool for learning about Java memory management.'
         licenseType = 'GPL v3'
-        vendor = 'Jumping Bean'
+        vendor = 'Jumping Bean <support@jumpingbean.co.za>'
         installSystemWide = true
         menu = true
         shortcut = true
+        
+        icons {
+            shortcut = ['shortcut-32.png','shortcut-64.png','shortcut-128.png', 'shortcut-256.png']
+            volume = 'volume.png'
+            setup = 'volume.png'
+        }
     }
+    
     dependencies {
         compile project (':GCExplorerService')
-    }
-
-    sourceSets {
-        main { 
-            output.resourcesDir = "build/classes/main" 
-        }
     }
     
     jar {
         manifest {
-            attributes  'Main-Class': 'za.co.jumpingbean.gcexplorer.ui.Main'
+            attributes  'Main-Class': 'za.co.jumpingbean.gcexplorer.ui.GCExplorer'
             attributes  'Implementation-Title': title
         }   
     }
@@ -75,6 +75,7 @@ project (':GCExplorerService'){
     dependencies {
         compile project (':GarbageGeneratorApp')
         testCompile group: 'org.javassist', name: 'javassist', version: '3.18.2-GA'
+        compile files ('/usr/lib/jvm/java-8-oracle/lib/tools.jar')
     }
     
     jar {
@@ -88,11 +89,6 @@ project (':GCExplorerService'){
 project (':GarbageGeneratorApp'){
 
     jar {
-        from {
-            configurations.compile.collect { 
-                it.isDirectory() ? it : zipTree(it) 
-            }
-        }
         manifest {
             attributes "Main-Class":  "za.co.jumpingbean.gc.Generator"
             attributes  'Implementation-Title': 'GarbageGeneratorApp'

@@ -16,6 +16,11 @@
  */
 package za.co.jumpingbean.gc.service;
 
+import com.sun.tools.attach.AgentInitializationException;
+import com.sun.tools.attach.AgentLoadException;
+import com.sun.tools.attach.AttachNotSupportedException;
+import com.sun.tools.attach.VirtualMachine;
+import java.io.File;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -44,7 +49,7 @@ import za.co.jumpingbean.gc.testApp.jmx.GCGeneratorMBean;
  */
 public class JMXQueryRunner {
 
-    private MBeanServerConnection server;
+    private final MBeanServerConnection server;
     private GarbageCollectorMXBean oldGenCollector;
     private GarbageCollectorMXBean youngGenCollector;
     private MemoryPoolMXBean edenSpace;
@@ -66,12 +71,75 @@ public class JMXQueryRunner {
             if (conn != null) {
                 conn.close();
             }
-            server = null;
+            //server = null;
             throw new IOException("Time out connecting to JMX port " + port);
         }
     }
 
-    public static JMXQueryRunner createJXMQueryRunner(String port) throws
+    private JMXQueryRunner(JMXServiceURL url) throws IOException {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("jmx.remote.x.request.waiting.timeout", "5000");
+        JMXConnector conn = null;
+        try {
+            conn = JMXConnectorFactory.connect(url, map);
+            server = conn.getMBeanServerConnection();
+        } catch (IOException ex) {
+            if (conn != null) {
+                conn.close();
+            }
+            //server = null;
+            throw new IOException("Time out connecting to JMX port");
+        }
+
+    }
+
+    /**
+     * This method does not pass any test. The undocumented ConnectorAddressLink
+     * method always returns null. There appears to be no reliable way to get
+     * the jmx address of processes running on the box unless the address is
+     * already known.
+     *
+     * @param pid
+     * @throws IOException
+     */
+    private JMXQueryRunner(int pid) throws IOException {
+        JMXConnector conn = null;
+        try {
+            VirtualMachine vm = VirtualMachine.attach(Integer.toString(pid));
+            String connectorAddr = vm.getAgentProperties().getProperty(
+                    "com.sun.management.jmxremote.localConnectorAddress");
+            if (connectorAddr == null) {
+                String agent = vm.getSystemProperties().getProperty(
+                        "java.home") + File.separator + "lib" + File.separator
+                        + "management-agent.jar";
+                vm.loadAgent(agent);
+                connectorAddr = vm.getAgentProperties().getProperty(
+                        "com.sun.management.jmxremote.localConnectorAddress");
+            }
+            JMXServiceURL serviceURL = new JMXServiceURL(connectorAddr);
+            conn = JMXConnectorFactory.connect(serviceURL);
+            server = conn.getMBeanServerConnection();
+        } catch (AttachNotSupportedException | AgentLoadException | AgentInitializationException ex) {
+            if (conn != null) {
+                conn.close();
+            }
+            throw new IOException("Could not connect to JMX agent or it is not supported");        }
+    }
+
+    public static JMXQueryRunner createJMXQueryRunner(int pid) throws IOException {
+        JMXQueryRunner qry = new JMXQueryRunner(pid);
+        qry.init();
+        return qry;
+    }
+
+    public static JMXQueryRunner createJMXQueryRunner(JMXServiceURL url) throws
+            IOException {
+        JMXQueryRunner qry = new JMXQueryRunner(url);
+        qry.init();
+        return qry;
+    }
+
+    public static JMXQueryRunner createJMXQueryRunner(String port) throws
             IOException {
         JMXQueryRunner qry = new JMXQueryRunner(port);
         qry.init();
@@ -164,7 +232,7 @@ public class JMXQueryRunner {
         return oldGenSpace;
     }
 
-    public GCGeneratorMBean getGCGenerator(){
+    public GCGeneratorMBean getGCGenerator() {
         return this.garbageGenerator;
     }
 
@@ -172,10 +240,10 @@ public class JMXQueryRunner {
         DecimalFormat df = new DecimalFormat("#,###,##0.000");
         StringBuilder str = new StringBuilder("Young GCs: Count ");
         str.append(youngGenCollector.getCollectionCount()).append("  ");
-        str.append("Time ").append(df.format((double)youngGenCollector.getCollectionTime()/1000d));
+        str.append("Time ").append(df.format((double) youngGenCollector.getCollectionTime() / 1000d));
         str.append("  |  ");
         str.append("Old Gen GCs: Count").append(oldGenCollector.getCollectionCount()).append("   ");
-        str.append("Time ").append(df.format((double)oldGenCollector.getCollectionTime()/1000d));
+        str.append("Time ").append(df.format((double) oldGenCollector.getCollectionTime() / 1000d));
         return str.toString();
     }
 }

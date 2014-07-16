@@ -22,6 +22,7 @@ import java.net.ServerSocket;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,14 +52,14 @@ public class ProcessController implements Runnable {
             = new HashMap<>();
 
     private int millisecs = 1000;
-    private final Main main;
+    private final GCExplorer main;
 
     private boolean isRunning = true;
 
     @Inject
     private final GeneratorService gen = new GeneratorService();
 
-    ProcessController(Main main) {
+    ProcessController(GCExplorer main) {
         this.main = main;
     }
 
@@ -193,7 +194,23 @@ public class ProcessController implements Runnable {
     public boolean isRunning() {
         return isRunning;
     }
+    
+    public UUID connectToProcess(int pid,String cmdLine) throws IOException{
+        UUID id = gen.connectToJavaProcess(pid);
+        synchronized (liveProcesses) {
+            this.liveProcesses.put(id, ProcessFactory.newProcess(id,cmdLine));
+        }
+        return id;        
+    }
 
+    public UUID connectToProcess(String url) throws IOException{
+        UUID id = gen.connectToJavaProcess(url);
+        synchronized (liveProcesses) {
+            this.liveProcesses.put(id, ProcessFactory.newProcess(id,""));
+        }
+        return id;        
+    }    
+    
     public UUID launchProcess(String string, List<String> gcOptionsExtra) throws IllegalStateException, IOException {
         Integer port = null;
         //find an open port
@@ -366,4 +383,8 @@ public class ProcessController implements Runnable {
         thread.start();
     }
 
+    public List<String> getLocalProcessesList(){
+        return gen.getLocalProcessesList();
+    }
+    
 }

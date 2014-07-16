@@ -33,9 +33,9 @@ import za.co.jumpingbean.gcexplorer.model.UUIDProcess;
  */
 public class CellNumberFormatter implements Callback<TableColumn<UUIDProcess, Number>, TableCell<UUIDProcess, Number>> {
 
-    private final Main app;
+    private final GCExplorer app;
 
-    public CellNumberFormatter(Main app) {
+    public CellNumberFormatter(GCExplorer app) {
             this.app = app;
     }
 
