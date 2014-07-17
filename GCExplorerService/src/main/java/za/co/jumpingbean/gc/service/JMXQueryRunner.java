@@ -78,9 +78,12 @@ public class JMXQueryRunner {
         }
     }
 
-    private JMXQueryRunner(JMXServiceURL url) throws IOException {
-        HashMap<String, String> map = new HashMap<>();
-        map.put("jmx.remote.x.request.waiting.timeout", "5000");
+    private JMXQueryRunner(JMXServiceURL url,String username,String password) throws IOException {
+        HashMap<String, String[]> map = new HashMap<>();
+        String[] timeout = {"5000"};
+        map.put("jmx.remote.x.request.waiting.timeout", timeout);
+        String[] credentials = {username,password};
+        map.put(JMXConnector.CREDENTIALS, credentials);
         JMXConnector conn = null;
         try {
             conn = JMXConnectorFactory.connect(url, map);
@@ -135,9 +138,10 @@ public class JMXQueryRunner {
         return qry;
     }
 
-    public static JMXQueryRunner createJMXQueryRunner(JMXServiceURL url) throws
+    public static JMXQueryRunner createJMXQueryRunner(JMXServiceURL url,String username,
+            String password) throws
             IOException {
-        JMXQueryRunner qry = new JMXQueryRunner(url);
+        JMXQueryRunner qry = new JMXQueryRunner(url,username,password);
         qry.init();
         return qry;
     }
@@ -255,15 +259,15 @@ public class JMXQueryRunner {
         return runtime.getSpecVersion();
     }
 
-    private void getRuntimeBean() 
-        throws MalformedObjectNameException,
+    private void getRuntimeBean()
+            throws MalformedObjectNameException,
             IOException, IllegalStateException {
-            Set<ObjectName> runtimeNames = server.queryNames(new ObjectName(
-                    ManagementFactory.RUNTIME_MXBEAN_NAME), null);
-            RuntimeMXBean bean = (ManagementFactory.
-                    newPlatformMXBeanProxy(server, runtimeNames.iterator().
-                            next().toString(),
-                            RuntimeMXBean.class));
-            this.runtime = bean;
-        }
+        Set<ObjectName> runtimeNames = server.queryNames(new ObjectName(
+                ManagementFactory.RUNTIME_MXBEAN_NAME), null);
+        RuntimeMXBean bean = (ManagementFactory.
+                newPlatformMXBeanProxy(server, runtimeNames.iterator().
+                        next().toString(),
+                        RuntimeMXBean.class));
+        this.runtime = bean;
     }
+}

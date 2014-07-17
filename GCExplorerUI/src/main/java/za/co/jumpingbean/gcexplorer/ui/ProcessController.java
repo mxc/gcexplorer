@@ -210,8 +210,8 @@ public class ProcessController implements Runnable {
         return id;
     }
 
-    public UUID connectToProcess(String url) throws IOException {
-        UUID id = gen.connectToJavaProcess(url);
+    public UUID connectToProcess(String url,String username, String password) throws IOException {
+        UUID id = gen.connectToJavaProcess(url,username,password);
         String javaVersion = gen.getJavaVersion(id);
         synchronized (liveProcesses) {
             this.liveProcesses.put(id, ProcessFactory.newProcess(id, "",javaVersion));

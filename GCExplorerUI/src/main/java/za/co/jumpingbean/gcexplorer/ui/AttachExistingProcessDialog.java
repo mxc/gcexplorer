@@ -27,6 +27,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import za.co.jumpingbean.gcexplorer.model.Utils;
@@ -45,6 +46,10 @@ public class AttachExistingProcessDialog implements Initializable {
     private TextField txtRemoteURL;
     @FXML
     private ListView lstLocalProcesses;
+    @FXML
+    private TextField txtUsername;
+    @FXML
+    private PasswordField txtPassword;
 
     private final GCExplorer app;
     private final MainForm parent;
@@ -62,13 +67,15 @@ public class AttachExistingProcessDialog implements Initializable {
             @Override
             public void handle(Event event) {
                 String str = (String) lstLocalProcesses.getSelectionModel().getSelectedItem();
-                if (str == null) {
-                    return;
-                } else {
+                if (str != null) {
                     try {
                         String params[] = str.split(" ");
                         int pid = Integer.parseInt(params[0]);
-                        UUID procId = app.getProcessController().connectToProcess(pid, params[1]);
+                        String strParams ="";
+                        if (params.length >=2){
+                            strParams=params[1];
+                        }
+                        UUID procId = app.getProcessController().connectToProcess(pid,strParams);
                         try {
                             parent.addPane(procId, true);
                             ((Stage) lstLocalProcesses.getScene().getWindow()).close();
@@ -90,9 +97,11 @@ public class AttachExistingProcessDialog implements Initializable {
             @Override
             public void handle(Event event) {
                 String str = txtRemoteURL.getText();
+                String user = txtUsername.getText();
+                String password = txtPassword.getText();
                 if (str != null) {
                     try {
-                        UUID procId = app.getProcessController().connectToProcess(str);
+                        UUID procId = app.getProcessController().connectToProcess(str,user,password);
                         try {
                             parent.addPane(procId, true);
                             ((Stage) lstLocalProcesses.getScene().getWindow()).close();

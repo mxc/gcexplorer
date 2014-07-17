@@ -52,11 +52,12 @@ public class GeneratorService {
         return this.startTestApp(params);
     }
 
-    public UUID connectToJavaProcess(String url) throws IOException {
+    public UUID connectToJavaProcess(String url,String username,String password) throws IOException {
         try {
             ProcessObject procObj = new ProcessObject(
                     GarbageGeneratorApp.class.getCanonicalName(),
-                    JMXQueryRunner.createJMXQueryRunner(new JMXServiceURL(url)));
+                    JMXQueryRunner.createJMXQueryRunner(new JMXServiceURL(url),
+                            username,password));
             try {
                 wlock.lock();
                 processes.put(procObj.getId(), procObj);

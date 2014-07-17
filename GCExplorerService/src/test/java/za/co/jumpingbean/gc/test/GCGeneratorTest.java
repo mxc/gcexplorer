@@ -340,9 +340,11 @@ public class GCGeneratorTest {
             String strPID = null;
             for (String proc : procs) {
                 String[] items = proc.split(" ");
-                if (items[1].contains("JConsole")) {
-                    strPID = items[0];
-                    break;
+                if (items.length >= 2) {
+                    if (items[1].contains("JConsole")) {
+                        strPID = items[0];
+                        break;
+                    }
                 }
             }
             if (strPID == null) {
@@ -401,8 +403,7 @@ public class GCGeneratorTest {
             p.destroy();
         }
     }
-    
-    
+
     @Test
     public void testJMXConnectionToRemoteProcess() throws IOException,
             GCExplorerServiceException, CannotCompileException, NotFoundException {
@@ -425,7 +426,8 @@ public class GCGeneratorTest {
             }
             Thread.sleep(1000L);
             try {
-                UUID procId = gen.connectToJavaProcess("service:jmx:rmi:///jndi/rmi://127.0.0.1:8888/jmxrmi");
+                UUID procId = gen.connectToJavaProcess(
+                        "service:jmx:rmi:///jndi/rmi://127.0.0.1:8888/jmxrmi", "", "");
                 JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
                 //runner.init();
