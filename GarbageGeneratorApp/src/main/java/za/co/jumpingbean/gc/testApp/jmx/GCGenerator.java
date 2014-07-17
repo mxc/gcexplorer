@@ -16,8 +16,6 @@
  */
 package za.co.jumpingbean.gc.testApp.jmx;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import za.co.jumpingbean.gc.testApp.LocalObjectGenerator;
 import za.co.jumpingbean.gc.testApp.LongLivedObjectGenerator;
 import za.co.jumpingbean.gc.testApp.GarbageGeneratorApp;
@@ -47,9 +45,8 @@ public class GCGenerator implements GCGeneratorMBean {
         try {
             localGenerator.generate(numInstances, size, creationDelay);
             return "Ok";
-        } catch (InterruptedException ex) {
-            Logger.getLogger(GCGenerator.class.getName()).log(Level.SEVERE, null, ex);
-            return "An error occurred";
+        } catch (OutOfMemoryError ex){
+            return "Out of memory!";
         }
     }
 
@@ -58,9 +55,8 @@ public class GCGenerator implements GCGeneratorMBean {
         try {
             longLivedGenerator.generate(numInstances, size, creationDelay);
             return "Ok";
-        } catch (InterruptedException ex) {
-            Logger.getLogger(GCGenerator.class.getName()).log(Level.SEVERE, null, ex);
-            return "An error occurred";
+        } catch (OutOfMemoryError ex){
+            return "Out of memory!";
         }
     }
 

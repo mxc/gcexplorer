@@ -17,7 +17,6 @@
 package za.co.jumpingbean.gc.testApp;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -26,7 +25,7 @@ import java.util.List;
  */
 public class LongLivedObjectGenerator {
 
-    private List<TestObject> list;
+    private final List<TestObject> list;
     private int size = 0;
 
     public LongLivedObjectGenerator() {
@@ -45,15 +44,18 @@ public class LongLivedObjectGenerator {
      * @param numInstances
      * @param instanceSize
      * @param creationDelay
-     * @throws InterruptedException
      */
-    public void generate(int numInstances, int instanceSize, long creationDelay) throws InterruptedException {
+    public void generate(int numInstances, int instanceSize, long creationDelay) {
         int i = 0;
         synchronized (list) {
             for (i = 1; i <= numInstances; i++) {
                 list.add(new TestObject(instanceSize * 1024 * 1024));
                 size += instanceSize;
-                Thread.sleep(creationDelay);
+                try {
+                    Thread.sleep(creationDelay);
+                } catch (InterruptedException ex) {
+                    //continue creating!
+                }
             }
         }
     }
@@ -66,10 +68,10 @@ public class LongLivedObjectGenerator {
             }
             List<TestObject> subList;
             if (reverse) {
-                int end = list.size()-1;
-                int start = end +1 - numInstances;
-                subList=new ArrayList<>();
-                for (int j=start;j<=end;j++){
+                int end = list.size() - 1;
+                int start = end + 1 - numInstances;
+                subList = new ArrayList<>();
+                for (int j = start; j <= end; j++) {
                     subList.add(list.get(j));
                 }
             } else {

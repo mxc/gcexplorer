@@ -28,18 +28,13 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.Point2D;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
-import za.co.jumpingbean.gcexplorer.model.Utils;
 
 /**
  *
@@ -67,6 +62,8 @@ public class LaunchProcessDialog implements Initializable {
     private RadioButton rdbUseAdaptiveSizePolicy;
     @FXML
     private RadioButton rdbUseCMSInitiatingOccupancyOnly;
+    @FXML
+    private RadioButton rdbUseCompressedOops;
     @FXML
     private TextField txtXms;
     @FXML
@@ -408,6 +405,11 @@ public class LaunchProcessDialog implements Initializable {
         if (!rdbUseParNewGC.isDisabled() && rdbUseParNewGC.isSelected()) {
             list.add("-XX:-UseParNewGC");
         }
+        
+        if (!rdbUseCompressedOops.isDisabled() && rdbUseCompressedOops.isSelected()) {
+            list.add("-XX:+UseCompressedOops");
+        }
+        
         if (errorMsg.toString().isEmpty()) {
             return list;
         } else {
@@ -449,11 +451,11 @@ public class LaunchProcessDialog implements Initializable {
                 && !field.getText().isEmpty()) {
             if (isNumber(field.getText())) {
                 int num = getNumber(field.getText());
-                if (num < maxVal && num > minVal) {
+                if (num <= maxVal && num >= minVal) {
                     list.add(param);
                 } else {
-                    errorMsg.append(fieldLabel).append(" must be greater than ").
-                            append(minVal).append(" less than ").append(maxVal).append("\n\r");
+                    errorMsg.append(fieldLabel).append(" must be greater than equal to ").
+                            append(minVal).append(" less than equal to ").append(maxVal).append("\n\r");
                 }
             } else {
                 errorMsg.append(fieldLabel).append(" must be a number\n\r");

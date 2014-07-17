@@ -22,12 +22,15 @@ import java.net.ServerSocket;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Timestamp;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -59,6 +62,8 @@ public class ProcessController implements Runnable {
     @Inject
     private final GeneratorService gen = new GeneratorService();
 
+    ExecutorService executorService = Executors.newFixedThreadPool(2);
+
     ProcessController(GCExplorer main) {
         this.main = main;
     }
@@ -71,15 +76,16 @@ public class ProcessController implements Runnable {
 
     public void stopAllProcesses() {
         isRunning = false;
-        gen.stopAllTestApps();
         synchronized (liveProcesses) {
+            gen.stopAllTestApps();
             this.liveProcesses.clear();
         }
+        executorService.shutdownNow();
     }
 
     public void stopProcess(UUID procId) {
-        gen.stopTestApp(procId);
         synchronized (liveProcesses) {
+            gen.stopTestApp(procId);
             this.liveProcesses.remove(procId);
         }
     }
@@ -194,23 +200,25 @@ public class ProcessController implements Runnable {
     public boolean isRunning() {
         return isRunning;
     }
-    
-    public UUID connectToProcess(int pid,String cmdLine) throws IOException{
+
+    public UUID connectToProcess(int pid, String cmdLine) throws IOException {
         UUID id = gen.connectToJavaProcess(pid);
+        String javaVersion = gen.getJavaVersion(id);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(id, ProcessFactory.newProcess(id,cmdLine));
+            this.liveProcesses.put(id, ProcessFactory.newProcess(id, cmdLine,javaVersion));
         }
-        return id;        
+        return id;
     }
 
-    public UUID connectToProcess(String url) throws IOException{
+    public UUID connectToProcess(String url) throws IOException {
         UUID id = gen.connectToJavaProcess(url);
+        String javaVersion = gen.getJavaVersion(id);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(id, ProcessFactory.newProcess(id,""));
+            this.liveProcesses.put(id, ProcessFactory.newProcess(id, "",javaVersion));
         }
-        return id;        
-    }    
-    
+        return id;
+    }
+
     public UUID launchProcess(String string, List<String> gcOptionsExtra) throws IllegalStateException, IOException {
         Integer port = null;
         //find an open port
@@ -236,7 +244,7 @@ public class ProcessController implements Runnable {
         String tmpPort = port.toString();
         port++;
         //Get current classpath
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (URL url
                 : ((URLClassLoader) (Thread.currentThread()
                 .getContextClassLoader())).getURLs()) {
@@ -250,8 +258,10 @@ public class ProcessController implements Runnable {
 
         procId = gen.startTestApp(tmpPort, classpath,
                 "za.co.jumpingbean.gc.testApp.GarbageGeneratorApp", gcOptions);
+        String javaVersion = gen.getJavaVersion(procId);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(procId, ProcessFactory.newProcess(procId, gcOptions.toString()));
+            this.liveProcesses.put(procId, 
+                    ProcessFactory.newProcess(procId, gcOptions.toString(),javaVersion));
         }
         return procId;
     }
@@ -305,28 +315,44 @@ public class ProcessController implements Runnable {
         return process.getStackedAreaChartDataItems();
     }
 
-    void genLocalInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
-        Thread thread = new Thread(new Runnable() {
+    public Future genLocalInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime, ProcessViewForm form) {
+        return executorService.submit(new Callable<String>() {
             @Override
-            public void run() {
-                gen.genLocalInstances(id, numInstances, instanceSize, creationPauseTime);
+            public String call() throws Exception {
+                String result = gen.genLocalInstances(id, numInstances, instanceSize, creationPauseTime);
+                if (result.equalsIgnoreCase("Out of memory!")) {
+                    form.setGenStatus("Process terminated - out of memory");
+                    stopProcess(id);
+                } else {
+                    StringBuilder str = new StringBuilder("Obj creation started with:");
+                    str.append("Objects:\t").append(numInstances).append("\n\r");
+                    str.append("Size(MB):\t").append(instanceSize).append("\n\r");
+                    str.append("Creation Pause (ms):\t").append(creationPauseTime).append("\n\r");
+                    form.setGenStatus(str.toString());
+                }
+                return result;
             }
         });
-        thread.setName("GC JMX Query Thread");
-        thread.setDaemon(true);
-        thread.start();
     }
 
-    void genLongLivedInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
-        Thread thread = new Thread(new Runnable() {
+    public Future genLongLivedInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime, ProcessViewForm form) {
+        return executorService.submit(new Callable<String>() {
             @Override
-            public void run() {
-                gen.genLongLivedInstances(id, numInstances, instanceSize, creationPauseTime);
+            public String call() throws Exception {
+                String result = gen.genLongLivedInstances(id, numInstances, instanceSize, creationPauseTime);
+                if (result.equalsIgnoreCase("Out of memory!")) {
+                    form.setGenStatus("Process terminated - out of memory");
+                    stopProcess(id);
+                } else {
+                    StringBuilder str = new StringBuilder("Obj creation started with:");
+                    str.append("Objects:\t").append(numInstances).append("\n\r");
+                    str.append("Size(MB):\t").append(instanceSize).append("\n\r");
+                    str.append("Creation Pause (ms):\t").append(creationPauseTime).append("\n\r");
+                    form.setGenStatus(str.toString());
+                }
+                return result;
             }
         });
-        thread.setName("GC JMX Query Thread");
-        thread.setDaemon(true);
-        thread.start();
     }
 
     String getParameters(UUID procId) {
@@ -383,8 +409,8 @@ public class ProcessController implements Runnable {
         thread.start();
     }
 
-    public List<String> getLocalProcessesList(){
+    public List<String> getLocalProcessesList() {
         return gen.getLocalProcessesList();
     }
-    
+
 }

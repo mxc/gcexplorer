@@ -7,9 +7,6 @@ package za.co.jumpingbean.gc.service;
 
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import za.co.jumpingbean.gc.testApp.GarbageGeneratorApp;

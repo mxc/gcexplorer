@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.RuntimeMXBean;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Set;
@@ -57,6 +58,7 @@ public class JMXQueryRunner {
     private MemoryPoolMXBean permGenSpace;
     private MemoryPoolMXBean oldGenSpace;
     private GCGeneratorMBean garbageGenerator;
+    private RuntimeMXBean runtime;
 
     private JMXQueryRunner(String port) throws IOException {
         HashMap<String, String> map = new HashMap<>();
@@ -123,7 +125,8 @@ public class JMXQueryRunner {
             if (conn != null) {
                 conn.close();
             }
-            throw new IOException("Could not connect to JMX agent or it is not supported");        }
+            throw new IOException("Could not connect to JMX agent or it is not supported");
+        }
     }
 
     public static JMXQueryRunner createJMXQueryRunner(int pid) throws IOException {
@@ -154,6 +157,7 @@ public class JMXQueryRunner {
             this.getCollectors();
             this.getMemoryPools();
             this.getGCGeneratorBean();
+            this.getRuntimeBean();
         } catch (IOException | MalformedObjectNameException ex) {
             throw new IllegalStateException("error initialising gc and memory pool mbeans");
         }
@@ -246,4 +250,20 @@ public class JMXQueryRunner {
         str.append("Time ").append(df.format((double) oldGenCollector.getCollectionTime() / 1000d));
         return str.toString();
     }
-}
+
+    String getJavaVersion() {
+        return runtime.getSpecVersion();
+    }
+
+    private void getRuntimeBean() 
+        throws MalformedObjectNameException,
+            IOException, IllegalStateException {
+            Set<ObjectName> runtimeNames = server.queryNames(new ObjectName(
+                    ManagementFactory.RUNTIME_MXBEAN_NAME), null);
+            RuntimeMXBean bean = (ManagementFactory.
+                    newPlatformMXBeanProxy(server, runtimeNames.iterator().
+                            next().toString(),
+                            RuntimeMXBean.class));
+            this.runtime = bean;
+        }
+    }

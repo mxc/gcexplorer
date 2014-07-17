@@ -40,14 +40,17 @@ public class LocalObjectGenerator {
      * @param numInstances
      * @param instanceSize
      * @param creationDelay
-     * @throws InterruptedException
      */
-    public void generate(int numInstances, int instanceSize, long creationDelay) throws InterruptedException {
+    public void generate(int numInstances, int instanceSize, long creationDelay)  {
         TestObject objs[] = new TestObject[numInstances];
         int i = 0;
         for (i = 1; i <= numInstances; i++) {
             objs[i - 1] = new TestObject(instanceSize * 1024 * 1024);
-            Thread.sleep(creationDelay);
+            try{
+                Thread.sleep(creationDelay);
+            }catch(InterruptedException ex){
+                //continuecreating!
+            }
         }
     }
 

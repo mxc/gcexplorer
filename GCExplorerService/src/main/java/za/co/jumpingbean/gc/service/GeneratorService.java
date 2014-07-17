@@ -35,12 +35,10 @@ import za.co.jumpingbean.gc.testApp.GarbageGeneratorApp;
 
 public class GeneratorService {
 
-    //Map<Process, ProcessParams> processes = new HashMap<>();
-    //Map<Process,JMXQueryRunner> jmxConnections = new HashMap<>();
     final Map<UUID, ProcessObject> processes = new HashMap<>();
     ReadWriteLock rwLock = new ReentrantReadWriteLock();
     Lock wlock = rwLock.writeLock();
-    Lock rlock = rwLock.writeLock();
+    Lock rlock = rwLock.readLock();
 
     public UUID startTestApp(String port, String classPath, String mainClass, List<String> gcOptions)
             throws IllegalStateException, IOException {
@@ -298,28 +296,64 @@ public class GeneratorService {
         return result;
     }
 
-    public void genLocalInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
-        processes.get(id).getQry().getGCGenerator().runLocalObjectCreator(numInstances, instanceSize, creationPauseTime);
+    public String genLocalInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
+        rlock.lock();
+        try {
+            String str = processes.get(id).getQry().getGCGenerator().runLocalObjectCreator(numInstances, instanceSize, creationPauseTime);
+            return str;
+        } finally {
+            rlock.unlock();
+        }
     }
 
-    public void genLongLivedInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
-        processes.get(id).getQry().getGCGenerator().runLongLivedObjectCreator(numInstances, instanceSize, creationPauseTime);
+    public String genLongLivedInstances(UUID id, int numInstances, int instanceSize, int creationPauseTime) {
+        rlock.lock();
+        try {
+            String str = processes.get(id).getQry().getGCGenerator().runLongLivedObjectCreator(numInstances, instanceSize, creationPauseTime);
+            return str;
+        } finally {
+            rlock.unlock();
+        }
     }
 
     public void releaseLongLivedInstances(UUID id, int numInstances, boolean reverse) {
-        processes.get(id).getQry().getGCGenerator().releaseLongLivedObjects(numInstances, reverse);
+        rlock.lock();
+        try {
+            processes.get(id).getQry().getGCGenerator().releaseLongLivedObjects(numInstances, reverse);
+        } finally {
+            rlock.unlock();
+        }
     }
 
     public String getGCInfo(UUID procId) {
-        return processes.get(procId).getQry().getGCInfo();
+        rlock.lock();
+        try {
+            return processes.get(procId).getQry().getGCInfo();
+        } finally {
+            rlock.unlock();
+        }
     }
 
     private boolean isControlableProcess(UUID id) {
-        return processes.get(id) instanceof ControlableProcess;
+        rlock.lock();
+        try {
+            return processes.get(id) instanceof ControlableProcess;
+        } finally {
+            rlock.unlock();
+        }
     }
 
     public List<String> getLocalProcessesList() {
-            return LocalJavaProcessFinder.getLocalJavaProcesses();
+        return LocalJavaProcessFinder.getLocalJavaProcesses();
+    }
+
+    public String getJavaVersion(UUID id) {
+        rlock.lock();
+        try {
+            return processes.get(id).getQry().getJavaVersion();
+        } finally {
+            rlock.unlock();
+        }
     }
 
 }

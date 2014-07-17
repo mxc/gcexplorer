@@ -154,13 +154,13 @@ public class ProcessViewForm implements Initializable {
         });
         lblSysInfo.setText("Updating...");
         lblGCInfo.setText("Updating...");
-}
+    }
 
-    public void disableGenerateObjectsButton(){
+    public void disableGenerateObjectsButton() {
         this.btnGenerateGarbageOptions.disableProperty().setValue(Boolean.TRUE);
         this.txtGeneratorStatus.disableProperty().setValue(Boolean.TRUE);
     }
-    
+
     private void showGarbageOptionsForm(ActionEvent e) {
         Stage stage = new Stage();
         try {
@@ -207,7 +207,15 @@ public class ProcessViewForm implements Initializable {
     }
 
     void setGenStatus(String str) {
-        this.txtGeneratorStatus.setText(str);
+        Platform.runLater(new Runnable() {
+
+            @Override
+            public void run() {
+                synchronized (app) {
+                    txtGeneratorStatus.setText(str);
+                }
+            }
+        });
     }
 
 }

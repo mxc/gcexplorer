@@ -28,13 +28,13 @@ public class ProcessFactory {
 
     static final int count = 40;
     
-    public static UUIDProcess newProcess(UUID id,String initParams) {
+    public static UUIDProcess newProcess(UUID id,String initParams,String javaVersion) {
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         return new UUIDProcess(id,new EdenMemoryPool(ts,count),
                 new SurvivorMemoryPool(ts,count),
                 new EmptySurvivorMemoryPool(ts,count),
                 new OldGenMemoryPool(ts,count),
-                new PermGenMemoryPool(ts,count),initParams);
+                new PermGenMemoryPool(ts,count),initParams,javaVersion);
     }
     
 }

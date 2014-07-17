@@ -20,22 +20,12 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import za.co.jumpingbean.gcexplorer.model.Utils;
 
 /**
@@ -107,13 +97,8 @@ public class GarbageGenerationOptionsForm implements Initializable {
                 Utils.createPopup("This will take " + totalSeconds + " seconds to complete",
                         txtCreationPauseTime.getScene().getWindow());
             }
-            app.getProcessController().genLocalInstances(procId, numInstances, instanceSize, creationPauseTime);
+            app.getProcessController().genLocalInstances(procId, numInstances, instanceSize, creationPauseTime,parent);
             ((Stage) txtNumInstances.getScene().getWindow()).close();
-            StringBuilder str = new StringBuilder("Obj creation started with:");
-            str.append("Objects:\t").append(numInstances).append("\n\r");
-            str.append("Size(MB):\t").append(instanceSize).append("\n\r");
-            str.append("Creation Pause (ms):\t").append(creationPauseTime).append("\n\r");
-            parent.setGenStatus(str.toString());
         } catch (NumberFormatException ex) {
             Utils.createPopup("All inputs must be integers",
                     txtCreationPauseTime.getScene().getWindow());
@@ -125,13 +110,8 @@ public class GarbageGenerationOptionsForm implements Initializable {
             int numInstances = Integer.parseInt(txtNumInstances.getText());
             int instanceSize = Integer.parseInt(txtInstanceSize.getText());
             int creationPauseTime = Integer.parseInt(txtCreationPauseTime.getText());
-            app.getProcessController().genLongLivedInstances(procId, numInstances, instanceSize, creationPauseTime);
+            app.getProcessController().genLongLivedInstances(procId, numInstances, instanceSize, creationPauseTime,parent);
             ((Stage) txtNumInstances.getScene().getWindow()).close();
-            StringBuilder str = new StringBuilder("Obj creation started with:");
-            str.append("Objects:\t").append(numInstances).append("\n\r");
-            str.append("Size(MB):\t").append(instanceSize).append("\n\r");
-            str.append("Creation Pause (ms):\t").append(creationPauseTime).append("\n\r");
-            parent.setGenStatus(str.toString());
         } catch (NumberFormatException ex) {
             Utils.createPopup("All inputs must be integers.",txtCreationPauseTime.getScene().getWindow());
         }

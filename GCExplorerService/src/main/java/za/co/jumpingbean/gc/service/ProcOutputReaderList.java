@@ -20,7 +20,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -74,6 +73,7 @@ public class ProcOutputReaderList extends ArrayList<String> {
 
     public void addString(String msg) {
         synchronized (output) {
+            System.out.println(msg);
             output[counter] = msg;
             if (counter >= 199) {
                 counter = 0;

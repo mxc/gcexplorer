@@ -255,14 +255,14 @@ public class MainForm implements Initializable {
                 ProcessViewForm.class.getResource("processView.fxml")
         );
         ProcessViewForm controller = new ProcessViewForm(app, procId);
-        if (disableGeneratorButton) {
-            controller.disableGenerateObjectsButton();
-        }
         loader.setController(controller);
         Parent pane;
         try {
             pane = loader.load();
             this.addTab(pane, procId, controller);
+            if (disableGeneratorButton) {
+                controller.disableGenerateObjectsButton();
+            }
         } catch (IOException ex) {
             throw new IOException("There was an error adding tab to the main display");
         }

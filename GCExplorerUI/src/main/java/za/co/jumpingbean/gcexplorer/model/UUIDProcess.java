@@ -49,11 +49,16 @@ public class UUIDProcess {
     private final SimpleStringProperty gcInfo = new SimpleStringProperty();
     private final SimpleStringProperty sysInfo = new SimpleStringProperty();
     private final String initParams;
+    private final String javaVersion;
 
     public UUIDProcess(UUID id, EdenMemoryPool edenPool,
-            SurvivorMemoryPool survivorPool, EmptySurvivorMemoryPool emptySurvivorMemoryPool, OldGenMemoryPool oldGenPool, PermGenMemoryPool permGenPool, String initParams) {
+            SurvivorMemoryPool survivorPool, 
+            EmptySurvivorMemoryPool emptySurvivorMemoryPool, 
+            OldGenMemoryPool oldGenPool, PermGenMemoryPool permGenPool, 
+            String initParams,String javaVersion) {
         this.id = id;
         number = ++count;
+        this.javaVersion=javaVersion;
         this.edenPool = edenPool;
         this.survivorPool = survivorPool;
         this.oldGenPool = oldGenPool;
@@ -220,8 +225,7 @@ public class UUIDProcess {
             this.sysInfo.set("Updating...");
         }
         StringBuilder str = new StringBuilder("Java Version:");
-        String version = System.getProperty("java.version");
-        str.append(version).append("\n\r");
+        str.append(javaVersion).append("\n\r");
         str.append(this.initParams).append("\n\r");
         Formatter pf = new Formatter(str);
         pf.format("%s %,33.2f", "Max Eden:", this.edenPool.getMax().getMeasure());

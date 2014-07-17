@@ -148,10 +148,10 @@ public abstract class MemoryPool {
         try {
 
             //TODO Make conversion of milliseconds accomodate changes in sampling time.
-            this.addDataWithRetry(fcList1, new Data((ts.getTime() - startTime.getTime()) / 1000, used),"used");
-            this.addDataWithRetry(ufList1, new Data((ts.getTime() - startTime.getTime()) / 1000, used),"used");
-            this.addDataWithRetry(fcList2, new Data((ts.getTime() - startTime.getTime()) / 1000, committed),"committed");
-            this.addDataWithRetry(ufList2, new Data((ts.getTime() - startTime.getTime()) / 1000, free),"free");
+            this.addData(fcList1, new Data((ts.getTime() - startTime.getTime()) / 1000, used),"used");
+            this.addData(ufList1, new Data((ts.getTime() - startTime.getTime()) / 1000, used),"used");
+            this.addData(fcList2, new Data((ts.getTime() - startTime.getTime()) / 1000, committed),"committed");
+            this.addData(ufList2, new Data((ts.getTime() - startTime.getTime()) / 1000, free),"free");
 
             if (fcList1.size() > this.numDataPoints) {
                 int over = fcList1.size() - this.numDataPoints;
@@ -170,7 +170,7 @@ public abstract class MemoryPool {
     }
 
     //Sometime get null pointer exceptions when adding points and points have been removed.
-    private void addDataWithRetry(ObservableList<Data<Number, Number>> list, Data data,String type) {
+    private void addData(ObservableList<Data<Number, Number>> list, Data data,String type) {
         try {
             list.add(data);
         } catch(NullPointerException ex){
