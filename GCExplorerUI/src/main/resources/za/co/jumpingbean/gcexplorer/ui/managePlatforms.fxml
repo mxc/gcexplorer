@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="221.0" prefWidth="507.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <ListView fx:id="lstPlatforms" prefHeight="174.0" prefWidth="507.0" />
+        <Label fx:id="lblDefault" text="Label" />
+        <HBox alignment="CENTER" prefHeight="41.0" prefWidth="507.0">
+            <children>
+                <Button fx:id="btnAddPlatform" mnemonicParsing="false" text="Add Platform" />
+                <Button fx:id="btnDelete" mnemonicParsing="false" text="Delete">
+                    <HBox.margin>
+                        <Insets left="10.0" />
+                    </HBox.margin>
+                </Button>
+                <Button fx:id="btnSetDefault" mnemonicParsing="false" text="Set As Default">
+                    <HBox.margin>
+                        <Insets left="10.0" />
+                    </HBox.margin>
+                </Button>
+            </children>
+        </HBox>
+    </children>
+</VBox>

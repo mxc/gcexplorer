@@ -106,6 +106,8 @@ public class LaunchProcessDialog implements Initializable {
     private TextField txtMaxGCPauseMillis;
     @FXML
     private RadioButton rdbUseParNewGC;
+    @FXML
+    private RadioButton rdbDefault;
 
     private final GCExplorer app;
     private final MainForm parent;
@@ -126,7 +128,7 @@ public class LaunchProcessDialog implements Initializable {
             return;
         }
         try {
-            procId = app.getProcessController().launchProcess(selectedGC, gcOptions);
+            procId = app.getProcessController().launchProcess(app.getPlatform(),selectedGC, gcOptions);
         } catch (IOException |
                 IllegalStateException |
                 NullPointerException ex) {
@@ -146,8 +148,8 @@ public class LaunchProcessDialog implements Initializable {
         txtStatus.setText(strBuilder.toString());
 
         try {
-            parent.addPane(procId,false);
-            ((Stage)this.btnLaunch.getScene().getWindow()).close();
+            parent.addPane(procId, false);
+            ((Stage) this.btnLaunch.getScene().getWindow()).close();
         } catch (IOException ex) {
             String txt = txtStatus.getText();
             txtStatus.setText(txt + "\n\rThere was an error adding tab to display");
@@ -164,6 +166,23 @@ public class LaunchProcessDialog implements Initializable {
         this.rdbParallelOld.setUserData("-XX:+UseParallelOldGC");
         this.rdbUseAdaptiveSizePolicy.setUserData("-XX:+UseAdaptiveSizePolicy");
         this.rdbUseCMSInitiatingOccupancyOnly.setUserData("-XX:+UseCMSInitiatingOccupancyOnly");
+        this.rdbDefault.setUserData("");
+        this.txtStatus.setWrapText(true);
+        
+        this.rdbDefault.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                boolean disable = false;
+                if (rdbDefault.isSelected()) {
+                    disable = true;
+                }
+                setCMSOptionsState(disable);
+                setCommonCMSG1State(disable);
+                setG1OptionsState(disable);
+                setParallelGCOptionsState(disable);
+                setCommonParallelG1State(disable);
+            }
+        });
 
         this.rdbSerial.setOnAction(new EventHandler() {
 
@@ -190,8 +209,8 @@ public class LaunchProcessDialog implements Initializable {
                 if (rdbConcMarkSweep.isSelected()) {
                     disable = true;
                 }
-                setCMSOptionsState(!disable);
-                setCommonCMSG1State(!disable);
+                setCMSOptionsState(disable);
+                setCommonCMSG1State(disable);
                 setG1OptionsState(disable);
                 setParallelGCOptionsState(disable);
                 setCommonParallelG1State(disable);
@@ -306,6 +325,7 @@ public class LaunchProcessDialog implements Initializable {
         ArrayList<String> list = new ArrayList<>();
         StringBuilder errorMsg = new StringBuilder();
 
+        //if (rdbDefault.is)
         this.addTextFieldOptionBetween(txtCMSInitiatingOccupancyFraction, "-XX:CMSInitiatingOccupancyFraction="
                 + txtCMSInitiatingOccupancyFraction.getText(), "CMSInitiatingOccupancyFraction", 0, 100, list, errorMsg);
 
@@ -405,11 +425,11 @@ public class LaunchProcessDialog implements Initializable {
         if (!rdbUseParNewGC.isDisabled() && rdbUseParNewGC.isSelected()) {
             list.add("-XX:-UseParNewGC");
         }
-        
+
         if (!rdbUseCompressedOops.isDisabled() && rdbUseCompressedOops.isSelected()) {
             list.add("-XX:+UseCompressedOops");
         }
-        
+
         if (errorMsg.toString().isEmpty()) {
             return list;
         } else {

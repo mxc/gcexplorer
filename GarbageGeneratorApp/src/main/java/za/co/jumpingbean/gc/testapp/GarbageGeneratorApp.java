@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package za.co.jumpingbean.gc.testApp;
+package za.co.jumpingbean.gc.testapp;
 
 
-import za.co.jumpingbean.gc.testApp.jmx.GCGenerator;
+import za.co.jumpingbean.gc.testapp.jmx.GCGenerator;
 import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,10 +53,18 @@ public class GarbageGeneratorApp {
         try {
             ObjectName name = new ObjectName("JumpingBean:name=GCGenerator");
             server.registerMBean(bean, name);
-        } catch (InstanceAlreadyExistsException | MBeanRegistrationException |
-                MalformedObjectNameException | NotCompliantMBeanException ex) {
+        } catch (InstanceAlreadyExistsException ex) {
             System.out.println("Error initialising MBean. Exiting...");
             System.exit(1);
+        }catch( MBeanRegistrationException ex){
+            System.out.println("Error initialising MBean. Exiting...");
+            System.exit(1);            
+        }catch(MalformedObjectNameException ex){
+            System.out.println("Error initialising MBean. Exiting...");
+            System.exit(1);            
+        }catch(NotCompliantMBeanException ex){
+            System.out.println("Error initialising MBean. Exiting...");
+            System.exit(1);            
         }
     }
 

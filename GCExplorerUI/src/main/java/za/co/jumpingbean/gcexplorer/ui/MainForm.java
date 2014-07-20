@@ -78,6 +78,8 @@ public class MainForm implements Initializable {
     @FXML
     private MenuItem mnuAttachToExisting;
     @FXML
+    private MenuItem mnuManagePlatforms;
+    @FXML
     private TableView<UUIDProcess> tblDetails;
     @FXML
     private ToggleGroup unitGroup;
@@ -166,7 +168,27 @@ public class MainForm implements Initializable {
         }
     }
 
-    protected void attachToProcess(ActionEvent e) {
+    protected void managePlatformsDialog(ActionEvent e) {
+        try {
+            Stage stage = new Stage();
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("managePlatforms.fxml")
+            );
+            loader.setController(new ManagePlatformsDialog(app, this));
+            Parent pane = loader.load();
+            stage.setScene(new Scene(pane));
+            stage.setTitle("Manage Platforms");
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.initOwner(this.tblDetails.getParent().getScene().getWindow());
+            stage.initStyle(StageStyle.UTILITY);
+            stage.show();
+        } catch (IOException ex) {
+            Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }   
+    
+    
+    protected void attachToProcessDialog(ActionEvent e) {
         try {
             Stage stage = new Stage();
             FXMLLoader loader = new FXMLLoader(
@@ -189,7 +211,8 @@ public class MainForm implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         this.mnuNewProcess.setOnAction(this::newProcess);
         this.mnuNumDataPoints.setOnAction(this::showNumDataPointsDialog);
-        this.mnuAttachToExisting.setOnAction(this::attachToProcess);
+        this.mnuAttachToExisting.setOnAction(this::attachToProcessDialog);
+        this.mnuManagePlatforms.setOnAction(this::managePlatformsDialog);
 
         this.mnuAbout.setOnAction(this::showAboutDialog);
         this.rdbB.setOnAction(this::changeUnits);
@@ -352,10 +375,10 @@ public class MainForm implements Initializable {
         });
 
         Label about = new Label("GCExplorer was developed as a training aid for Jumping Bean's"
-                + " Java performance tuning training course. It has been released under the GPLv2."
+                + " Java performance tuning training course. It has been released under the GPLv3."
                 + "Jumping Bean is a trademark of Indicento cc");
         about.setWrapText(true);
-        about.setMaxWidth(300);
+        about.setMaxWidth(400);
         vBox.getChildren()
                 .add(jumpingbean);
         vBox.getChildren()

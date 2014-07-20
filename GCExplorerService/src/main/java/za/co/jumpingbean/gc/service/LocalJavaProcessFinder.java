@@ -9,7 +9,7 @@ import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
 import java.util.LinkedList;
 import java.util.List;
-import za.co.jumpingbean.gc.testApp.GarbageGeneratorApp;
+import za.co.jumpingbean.gc.testapp.GarbageGeneratorApp;
 
 /**
  *

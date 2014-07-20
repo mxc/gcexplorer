@@ -132,7 +132,7 @@ public class GCGeneratorTest {
 
             List<String> cmdOption = new LinkedList<>();
             cmdOption.add("-XX:+UseConcMarkSweepGC");
-            id = gen.startTestApp("8484", "", "Test", cmdOption);
+            id = gen.startTestApp("java","8484", "", "Test", cmdOption);
             String output = gen.getProcessOutput(id);
             assertThat(output, is(equalTo("Hello World")));
         } finally {
@@ -151,7 +151,7 @@ public class GCGeneratorTest {
         UUID procId = null;
         try {
 
-            procId = gen.startTestApp("8484", "", "Test", cmdOption);
+            procId = gen.startTestApp("java","8484", "", "Test", cmdOption);
             JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
             //runner.init();
@@ -211,7 +211,7 @@ public class GCGeneratorTest {
         try {
             List<String> cmdOption = new LinkedList<>();
             cmdOption.add("-XX:+UseSerialGC");
-            procId = gen.startTestApp("8484", "", "Test", cmdOption);
+            procId = gen.startTestApp("java","8484", "", "Test", cmdOption);
             JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
             //runner.init();
@@ -273,7 +273,7 @@ public class GCGeneratorTest {
 
             List<String> cmdOption = new LinkedList<>();
             cmdOption.add("-XX:+UseParallelGC");
-            procId = gen.startTestApp("8484", "", "Test", cmdOption);
+            procId = gen.startTestApp("java","8484", "", "Test", cmdOption);
             JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
             //runner.init();
@@ -488,7 +488,7 @@ public class GCGeneratorTest {
         try {
             List<String> cmdOption = new LinkedList<>();
             cmdOption.add("-XX:+UseG1GC");
-            procId = gen.startTestApp("8484", "", "Test", cmdOption);
+            procId = gen.startTestApp("java","8484", "", "Test", cmdOption);
             JMXQueryRunner runner = gen.getJMXQueryRunner(procId);
 
             //runner.init();

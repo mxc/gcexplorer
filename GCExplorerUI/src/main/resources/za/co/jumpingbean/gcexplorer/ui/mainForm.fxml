@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane id="mainLayout" fx:id="mainLayout" prefHeight="600.0" prefWidth="800.0" stylesheets="@explorer.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane id="mainLayout" fx:id="mainLayout" prefHeight="600.0" stylesheets="@explorer.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <top>
         <VBox BorderPane.alignment="CENTER">
             <children>
@@ -30,7 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     <menus>
                         <Menu mnemonicParsing="false" text="Main">
                             <items>
-                                <MenuItem fx:id="mnuNewProcess" mnemonicParsing="false" text="Launch Test App" /><MenuItem fx:id="mnuAttachToExisting" mnemonicParsing="false" text="Attach to Existing Process" /><MenuItem fx:id="mnuNumDataPoints" mnemonicParsing="false" text="Number of Data Points" />
+                                <MenuItem fx:id="mnuNewProcess" mnemonicParsing="false" text="Launch Test App" />
+                                <MenuItem fx:id="mnuAttachToExisting" mnemonicParsing="false" text="Attach to Existing Process" />
+                                <MenuItem fx:id="mnuNumDataPoints" mnemonicParsing="false" text="Number of Data Points" />
+                                <MenuItem fx:id="mnuManagePlatforms" mnemonicParsing="false" text="Manage Platforms" />
                                 <MenuItem mnemonicParsing="false" text="Close" />
                             </items>
                         </Menu>

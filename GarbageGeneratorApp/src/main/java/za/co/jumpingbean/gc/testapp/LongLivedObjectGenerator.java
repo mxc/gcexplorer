@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package za.co.jumpingbean.gc.testApp;
+package za.co.jumpingbean.gc.testapp;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ public class LongLivedObjectGenerator {
     private int size = 0;
 
     public LongLivedObjectGenerator() {
-        list = new ArrayList<>();
+        list = new ArrayList<TestObject>();
     }
 
     /**
@@ -70,7 +70,7 @@ public class LongLivedObjectGenerator {
             if (reverse) {
                 int end = list.size() - 1;
                 int start = end + 1 - numInstances;
-                subList = new ArrayList<>();
+                subList = new ArrayList<TestObject>();
                 for (int j = start; j <= end; j++) {
                     subList.add(list.get(j));
                 }

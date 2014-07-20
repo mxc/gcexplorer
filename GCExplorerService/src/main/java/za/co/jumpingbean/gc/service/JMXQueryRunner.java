@@ -42,7 +42,7 @@ import za.co.jumpingbean.gc.service.constants.OldGenerationSpace;
 import za.co.jumpingbean.gc.service.constants.PermGen;
 import za.co.jumpingbean.gc.service.constants.SurvivorSpace;
 import za.co.jumpingbean.gc.service.constants.YoungGenerationCollector;
-import za.co.jumpingbean.gc.testApp.jmx.GCGeneratorMBean;
+import za.co.jumpingbean.gc.testapp.jmx.GCGeneratorMBean;
 
 /**
  *

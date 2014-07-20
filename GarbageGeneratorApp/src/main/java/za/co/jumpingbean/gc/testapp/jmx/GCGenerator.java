@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package za.co.jumpingbean.gc.testApp.jmx;
+package za.co.jumpingbean.gc.testapp.jmx;
 
-import za.co.jumpingbean.gc.testApp.LocalObjectGenerator;
-import za.co.jumpingbean.gc.testApp.LongLivedObjectGenerator;
-import za.co.jumpingbean.gc.testApp.GarbageGeneratorApp;
+import za.co.jumpingbean.gc.testapp.LocalObjectGenerator;
+import za.co.jumpingbean.gc.testapp.LongLivedObjectGenerator;
+import za.co.jumpingbean.gc.testapp.GarbageGeneratorApp;
 
 /**
  *

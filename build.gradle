@@ -15,11 +15,19 @@ subprojects {
         mavenCentral()
     }
 
+    configurations {
+        provided
+    }
+
+    sourceSets {
+        main { compileClasspath += configurations.provided }
+    }
+
     dependencies{
         testCompile group: 'junit', name: 'junit', version: '4.11'
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
         testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'       
-        compile group: 'javax.inject', name: 'javax.inject', version: '1'
+        provided group: 'javax.inject', name: 'javax.inject', version: '1'
     }
 
     jar {
@@ -28,47 +36,105 @@ subprojects {
             attributes  'Built-By': user
             attributes  'Build-Date': new Date()
             attributes  'Implementation-Version': "${appversion}"
+            attributes  'Codebase': 'http://www.javaperformancetuning.co.za'
+            attributes  'Application-Name': 'GCExplorer'
         }
     }
-
+    
 }
 
 project (':GCExplorerUI'){
+
     
-    apply from: 'http://dl.bintray.com/content/shemnon/javafx-gradle/0.4.0/javafx.plugin'    
-    
-    javafx{ 
-        mainClass = "za.co.jumpingbean.gcexplorer.ui.GCExplorer"    
-        category = 'System'
-        copyright = 'Copyright (c) 2014 Mark Clarke Jumping Bean'
-        description = 'A tool for learning about Java memory management.'
-        licenseType = 'GPL v3'
-        vendor = 'Jumping Bean <support@jumpingbean.co.za>'
-        installSystemWide = true
-        menu = true
-        shortcut = true
+    ext{
+        mainClass = "za.co.jumpingbean.gcexplorer.ui.GCExplorer"
+    }
+   
+    task allinone(type: Jar) {
         
-        icons {
-            shortcut = ['shortcut-32.png','shortcut-64.png','shortcut-128.png', 'shortcut-256.png']
-            volume = 'volume.png'
-            setup = 'volume.png'
+        destinationDir=new File("$buildDir/allinone")
+        manifest {
+            attributes  'Main-Class': 'za.co.jumpingbean.gcexplorer.ui.GCExplorer'
+            attributes  'Implementation-Title': title
+            attributes  'Created-By': author + ' '+  vendor
+            attributes  'Built-By': user
+            attributes  'Build-Date': new Date()
+            attributes  'Implementation-Version': "${appversion}"
         }
+       
+
+        from {configurations.compile.collect
+            { it.isDirectory() ? it : zipTree(it) }
+        }        
+        with jar
     }
     
+    
+    //apply from: 'http://dl.bintray.com/content/shemnon/javafx-gradle/0.4.0/javafx.plugin'    
+    
+    //    javafx{ 
+    //        mainClass = "za.co.jumpingbean.gcexplorer.ui.GCExplorer"    
+    //        category = 'System'
+    //        copyright = 'Copyright (c) 2014 Mark Clarke Jumping Bean'
+    //        description = 'A tool for learning about Java memory management.'
+    //        licenseType = 'GPL v3'
+    //        vendor = 'Jumping Bean <support@jumpingbean.co.za>'
+    //        installSystemWide = true
+    //        menu = true
+    //        shortcut = true
+    //
+    //        jvmArgs = ['-XX:+AggressiveOpts', '-XX:CompileThreshold=1']
+    //        systemProperties = [ 'prism.disableRegionCaching':'true' ]
+    //        arguments = ['-l', '--fast']
+    //            
+    //        releaseKey {
+    //            alias = 'release'
+    //            //keyPass = '' // provide via command line
+    //            keyStore = file('./jumpingbean.jks')
+    //            //storePass = ''  // provide via command line
+    //        }
+    //        signingMode 'release'
+    //            
+    //            
+    //    }
+    //    
     dependencies {
         compile project (':GCExplorerService')
+        compile project (':GCExplorerPreloader')
+        compile project (':GarbageGeneratorApp')
+        provided files ('/usr/lib/jvm/java-8-oracle/jre/lib/javaws.jar')
     }
     
     jar {
         manifest {
             attributes  'Main-Class': 'za.co.jumpingbean.gcexplorer.ui.GCExplorer'
             attributes  'Implementation-Title': title
+            attributes  'JavaFX-Preloader-Class': 'za.co.jumpingbean.gcexplorer.preloader.GCExplorerSplashScreen'
+            attributes  'JavaFX-Version':   '2.2'
+            attributes  'Permissions': 'all-permissions'
         }   
     }
 
+    task dist(dependsOn:jar) {
+        
+        doLast{
+            copy{
+                from configurations.compile
+                into "$buildDir/libs"
+                //exclude  { details->details.file.name.equals("tools.jar") }
+                exclude  { details->details.file.name.equals("GCExplorerUI.jar") }
+            }
+            
+            def password = System.console().readPassword("\n\$ Enter keystore password: ")
+            
+            project.exec {
+                commandLine "../javafxpackager.sh"
+                args "$password"
+            }
+        }
+    }
+    
 }
-
-
 
 project (':GCExplorerService'){
     
@@ -87,12 +153,17 @@ project (':GCExplorerService'){
 }
 
 project (':GarbageGeneratorApp'){
-
+    sourceCompatibility = '1.6'
     jar {
         manifest {
-            attributes "Main-Class":  "za.co.jumpingbean.gc.Generator"
+            attributes "Main-Class":  "za.co.jumpingbean.gc.testapp.GarbageGeneratorApp"
             attributes  'Implementation-Title': 'GarbageGeneratorApp'
         }
     }
+
+}
+
+
+project (':GCExplorerPreloader'){
 
 }

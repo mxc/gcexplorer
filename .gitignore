@@ -3,3 +3,6 @@
 .nb-gradle
 build
 GCExplorerService/Test.class
+jumpingbean.jks
+gradle.properties
+.gcexplorer.properties

@@ -1,2 +1,2 @@
 rootProject.name = 'GCExplorer'
-include 'GCExplorerUI','GCExplorerService','GarbageGeneratorApp' 
+include 'GCExplorerUI','GCExplorerService','GarbageGeneratorApp' ,'GCExplorerPreloader'

@@ -16,19 +16,17 @@
  */
 package za.co.jumpingbean.gc.testApp.test;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.number.IsCloseTo.closeTo;
 import org.junit.Test;
 import org.mockito.Mockito;
-import za.co.jumpingbean.gc.testApp.jmx.GCGenerator;
-import za.co.jumpingbean.gc.testApp.jmx.GCGeneratorMBean;
-import za.co.jumpingbean.gc.testApp.LocalObjectGenerator;
-import za.co.jumpingbean.gc.testApp.LongLivedObjectGenerator;
-import za.co.jumpingbean.gc.testApp.GarbageGeneratorApp;
+import za.co.jumpingbean.gc.testapp.jmx.GCGenerator;
+import za.co.jumpingbean.gc.testapp.jmx.GCGeneratorMBean;
+import za.co.jumpingbean.gc.testapp.LocalObjectGenerator;
+import za.co.jumpingbean.gc.testapp.LongLivedObjectGenerator;
+import za.co.jumpingbean.gc.testapp.GarbageGeneratorApp;
 
 /**
  *
@@ -53,7 +51,7 @@ public class GCGeneratorAppTest {
         LongLivedObjectGenerator gen = new LongLivedObjectGenerator();
         gen.generate(10, 10, 50);
         Long end = System.currentTimeMillis();
-        assertThat(((double) end - (double) start), closeTo(500d, 200d));
+        assertThat(((double) end - (double) start), closeTo(500d, 300d));
         assertThat(gen.getObjectCount(), equalTo(10));
         assertThat(gen.getApproximateMemoryOccupied(), equalTo(100));
     }

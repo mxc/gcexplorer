@@ -16,6 +16,8 @@
  */
 package za.co.jumpingbean.gcexplorer.ui;
 
+import com.sun.jnlp.JNLPClassLoader;
+import com.sun.jnlp.JNLPClassLoaderUtil;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -38,6 +40,10 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart.Series;
 import javax.inject.Inject;
+import javax.jnlp.BasicService;
+import javax.jnlp.DownloadService2;
+import javax.jnlp.ServiceManager;
+import javax.jnlp.UnavailableServiceException;
 import za.co.jumpingbean.gc.service.GCExplorerServiceException;
 import za.co.jumpingbean.gc.service.GeneratorService;
 import za.co.jumpingbean.gc.service.constants.DESC;
@@ -205,21 +211,21 @@ public class ProcessController implements Runnable {
         UUID id = gen.connectToJavaProcess(pid);
         String javaVersion = gen.getJavaVersion(id);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(id, ProcessFactory.newProcess(id, cmdLine,javaVersion));
+            this.liveProcesses.put(id, ProcessFactory.newProcess(id, cmdLine, javaVersion));
         }
         return id;
     }
 
-    public UUID connectToProcess(String url,String username, String password) throws IOException {
-        UUID id = gen.connectToJavaProcess(url,username,password);
+    public UUID connectToProcess(String url, String username, String password) throws IOException {
+        UUID id = gen.connectToJavaProcess(url, username, password);
         String javaVersion = gen.getJavaVersion(id);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(id, ProcessFactory.newProcess(id, "",javaVersion));
+            this.liveProcesses.put(id, ProcessFactory.newProcess(id, "", javaVersion));
         }
         return id;
     }
 
-    public UUID launchProcess(String string, List<String> gcOptionsExtra) throws IllegalStateException, IOException {
+    public UUID launchProcess(String javaPath, String collector, List<String> gcOptionsExtra) throws IllegalStateException, IOException {
         Integer port = null;
         //find an open port
         for (int i = 8181; i < 65535; i++) {
@@ -238,32 +244,50 @@ public class ProcessController implements Runnable {
         }
 
         List<String> gcOptions = new LinkedList<>();
-        gcOptions.add(string);
+        if (!collector.isEmpty()) {
+            gcOptions.add(collector);
+        }
         gcOptions.addAll(gcOptionsExtra);
         UUID procId;
         String tmpPort = port.toString();
         port++;
-        //Get current classpath
-        StringBuilder buffer = new StringBuilder();
-        for (URL url
-                : ((URLClassLoader) (Thread.currentThread()
-                .getContextClassLoader())).getURLs()) {
-            buffer.append(new File(url.getPath()));
-            buffer.append(System.getProperty("path.separator"));
+        String classpath = "";
+        if (!isRunningJavaWebStart()) {
+            //Get current classpath
+            StringBuilder buffer = new StringBuilder();
+            for (URL url
+                    : ((URLClassLoader) (Thread.currentThread()
+                    .getContextClassLoader())).getURLs()) {
+                buffer.append(new File(url.getPath()));
+                buffer.append(System.getProperty("path.separator"));
+            }
+            classpath = buffer.toString();
+            int toIndex = classpath
+                    .lastIndexOf(System.getProperty("path.separator"));
+            classpath = classpath.substring(0, toIndex);
+            procId = gen.startTestApp(javaPath, tmpPort, classpath,
+                    "za.co.jumpingbean.gc.testapp.GarbageGeneratorApp", gcOptions);
+        } else {
+            throw new IllegalStateException("Unable to launch process via Java Web Start.");
         }
-        String classpath = buffer.toString();
-        int toIndex = classpath
-                .lastIndexOf(System.getProperty("path.separator"));
-        classpath = classpath.substring(0, toIndex);
 
-        procId = gen.startTestApp(tmpPort, classpath,
-                "za.co.jumpingbean.gc.testApp.GarbageGeneratorApp", gcOptions);
         String javaVersion = gen.getJavaVersion(procId);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(procId, 
-                    ProcessFactory.newProcess(procId, gcOptions.toString(),javaVersion));
+            this.liveProcesses.put(procId,
+                    ProcessFactory.newProcess(procId, gcOptions.toString(), javaVersion));
         }
         return procId;
+    }
+
+    private boolean isRunningJavaWebStart() {
+        boolean isWebStartApp = false;
+        try {
+            Class.forName("javax.jnlp.ServiceManager");
+            isWebStartApp = true;
+        } catch (ClassNotFoundException ex) {
+            isWebStartApp = false;
+        }
+        return isWebStartApp;
     }
 
     public ObservableList<Series<Number, Number>> getEdenSeries(UUID procId) {

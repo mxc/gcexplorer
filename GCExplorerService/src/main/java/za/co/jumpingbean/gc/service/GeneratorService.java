@@ -31,7 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.management.remote.JMXServiceURL;
 import za.co.jumpingbean.gc.service.constants.DESC;
-import za.co.jumpingbean.gc.testApp.GarbageGeneratorApp;
+import za.co.jumpingbean.gc.testapp.GarbageGeneratorApp;
 
 public class GeneratorService {
 
@@ -40,7 +40,7 @@ public class GeneratorService {
     Lock wlock = rwLock.writeLock();
     Lock rlock = rwLock.readLock();
 
-    public UUID startTestApp(String port, String classPath, String mainClass, List<String> gcOptions)
+    public UUID startTestApp(String javaPath,String port, String classPath, String mainClass, List<String> gcOptions)
             throws IllegalStateException, IOException {
         ProcessParams params;
 
@@ -49,15 +49,15 @@ public class GeneratorService {
         } else {
             params = new ProcessParams(port, classPath, mainClass, gcOptions);
         }
-        return this.startTestApp(params);
+        return this.startTestApp(javaPath,params);
     }
 
-    public UUID connectToJavaProcess(String url,String username,String password) throws IOException {
+    public UUID connectToJavaProcess(String url, String username, String password) throws IOException {
         try {
             ProcessObject procObj = new ProcessObject(
                     GarbageGeneratorApp.class.getCanonicalName(),
                     JMXQueryRunner.createJMXQueryRunner(new JMXServiceURL(url),
-                            username,password));
+                            username, password));
             try {
                 wlock.lock();
                 processes.put(procObj.getId(), procObj);
@@ -87,10 +87,10 @@ public class GeneratorService {
         }
     }
 
-    public UUID startTestApp(ProcessParams params) throws IllegalStateException, IOException {
+    public UUID startTestApp(String javaPath,ProcessParams params) throws IllegalStateException, IOException {
         System.out.println("Starting up....");
         List<String> cmd = new LinkedList<>();
-        cmd.add("java");
+        cmd.add(javaPath);
         if (params.getClassPath() != null && !params.getClassPath().isEmpty()) {
             cmd.add("-cp");
             cmd.add(params.getClassPath());
@@ -107,17 +107,18 @@ public class GeneratorService {
 
         ProcessBuilder procBuilder = new ProcessBuilder(cmd);
         Process proc = procBuilder.start();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                proc.getInputStream()));
+        
+        BufferedReader error = new BufferedReader(new InputStreamReader(
+                proc.getErrorStream()));
         try {
             if (proc.exitValue() != 0) {
-                BufferedReader error = new BufferedReader(new InputStreamReader(
-                        proc.getErrorStream()));
-                StringBuilder str = new StringBuilder(error.readLine());
-                String tmp;
-                while ((tmp = error.readLine()) != null) {
-                    str.append(tmp);
-                }
-                throw new IllegalStateException("Error starting process: " + str.toString());
+                String str = getError(error);
+                error.close();
+                reader.close();
+                throw new IllegalStateException("Error starting process: " + str);
             } else {
                 throw new IllegalStateException("Process terminate too early.");
             }
@@ -149,15 +150,21 @@ public class GeneratorService {
                 } finally {
                     wlock.unlock();
                 }
+                error.close();
                 return procObj.getId();
             } catch (IOException ex) {
                 outputList.stop();
+                reader.close();
+                error.close();
                 proc.destroy();
                 throw new IllegalStateException(ex.getMessage());
             }
         } else {
+            String str = getError(error);
+            error.close();
+            reader.close();
             proc.destroy();
-            throw new IllegalStateException("Process terminate before initialistion could complete.");
+            throw new IllegalStateException("Process terminate before initialistion could complete. "+str);
         }
     }
 
@@ -355,6 +362,15 @@ public class GeneratorService {
         } finally {
             rlock.unlock();
         }
+    }
+
+    private String getError(BufferedReader error) throws IOException {
+        StringBuilder str = new StringBuilder(error.readLine());
+        String tmp;
+        while ((tmp = error.readLine()) != null) {
+            str.append(tmp);
+        }
+        return str.toString();
     }
 
 }
