@@ -1,22 +1,28 @@
 #!/bin/sh
 
-echo "=============================================="
-echo " Welcome to GCExplorer JavaFX Packaging Script"
-echo "=============================================="
-echo "Runing javafxpackager ..."
+echo "================================================"
+echo " Welcome to GarbageGeneratorApp Packaging Script"
+echo "================================================"
+echo "Runing javasigner ..."
 echo "signing jars ..."
 
 currdir=`pwd`
 
 cd $2/GarbageGeneratorApp/build/libs/
 
-jarsigner -storepass "$1" -keystore $2/GCExplorerUI/jumpingbean.jks GarbageGeneratorApp.jar release
+jarsigner -storepass "$1" -keystore $2/GCExplorerUI/jumpingbean.jks -signedjar SGarbageGeneratorApp.jar GarbageGeneratorApp.jar release
 
 if  [ $? -ne 0 ]; then 
 	echo "Error signing jars"
 	cd $currdir
 	exit
 fi
+
+if [ ! -d "../signedstandalone" ]; then
+   mkdir  "../signedstandalone"
+fi
+
+mv SGarbageGeneratorApp.jar ../signedstandalone/GarbageGeneratorApp.jar
 
 cd $currdir
 

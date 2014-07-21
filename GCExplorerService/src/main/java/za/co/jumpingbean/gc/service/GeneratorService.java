@@ -116,7 +116,6 @@ public class GeneratorService {
 
         ProcessBuilder procBuilder = new ProcessBuilder(cmd);
         Process proc = procBuilder.start();
-
         BufferedReader reader = new BufferedReader(new InputStreamReader(
                 proc.getInputStream()));
 
@@ -138,15 +137,21 @@ public class GeneratorService {
 
         //give proc time to start up before
         //connecting to JMX server
-        synchronized (proc) {
+
+        synchronized (this) {
             try {
-                proc.wait(1000L);
+                if (isWebStart){
+                    this.wait(5000L);
+                }else{
+                    this.wait(1000L);
+                }
             } catch (InterruptedException ex) {
-                Logger.getLogger(GeneratorService.class.getName()).log(Level.SEVERE, null, ex);
+
             }
         }
+
         //See if proc exits early. It should be still be alive at this point
-        if (proc.isAlive()) {
+        //if (proc.isAlive()) {
             ProcOutputReaderList outputList = new ProcOutputReaderList(proc, reader);
             outputList.init();
             try {
@@ -168,13 +173,13 @@ public class GeneratorService {
                 proc.destroy();
                 throw new IllegalStateException(ex.getMessage());
             }
-        } else {
-            String str = getError(error);
-            error.close();
-            reader.close();
-            proc.destroy();
-            throw new IllegalStateException("Process terminate before initialistion could complete. " + str);
-        }
+//        } else {
+//            String str = getError(error);
+//            error.close();
+//            reader.close();
+//            proc.destroy();
+//            throw new IllegalStateException("Process terminate before initialistion could complete. " + str);
+//        }
     }
 
     public void stopTestApp(UUID id) {
@@ -374,10 +379,9 @@ public class GeneratorService {
     }
 
     private String getError(BufferedReader error) throws IOException {
-        StringBuilder str = new StringBuilder(error.readLine());
-        String tmp;
-        while ((tmp = error.readLine()) != null) {
-            str.append(tmp);
+        StringBuilder str = new StringBuilder();
+        while (error.ready()) {
+            str.append(error.readLine() );
         }
         return str.toString();
     }

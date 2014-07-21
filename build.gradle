@@ -42,7 +42,9 @@ subprojects {
             attributes  'Built-By': user
             attributes  'Build-Date': new Date()
             attributes  'Implementation-Version': "${appversion}"
-            attributes  'Codebase': 'http://www.javaperformancetuning.co.za'
+            if (project.properties.env=="prod"){
+                    attributes  'Codebase': 'http://www.javaperformancetuning.co.za'
+            }
             attributes  'Application-Name': 'GCExplorer'
         }
     }
@@ -127,7 +129,7 @@ project (':GCExplorerUI'){
             copy{
                 from configurations.compile
                 into "$buildDir/libs"
-                exclude  { details->details.file.name.equals("GarbageGeneratorApp.jar") }
+                //exclude  { details->details.file.name.equals("GarbageGeneratorApp.jar") }
                 exclude  { details->details.file.name.equals("GCExplorerUI.jar") }
             }
             
@@ -161,6 +163,8 @@ project (':GCExplorerService'){
 }
 
 project (':GarbageGeneratorApp'){
+    
+   
     sourceCompatibility = '1.6'
     jar {
         manifest {
