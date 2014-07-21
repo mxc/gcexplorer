@@ -266,9 +266,16 @@ public class ProcessController implements Runnable {
                     .lastIndexOf(System.getProperty("path.separator"));
             classpath = classpath.substring(0, toIndex);
             procId = gen.startTestApp(javaPath, tmpPort, classpath,
-                    "za.co.jumpingbean.gc.testapp.GarbageGeneratorApp", gcOptions);
+                    "za.co.jumpingbean.gc.testapp.GarbageGeneratorApp", gcOptions,false);
         } else {
-            throw new IllegalStateException("Unable to launch process via Java Web Start.");
+            procId = gen.startTestApp(javaPath+"ws", tmpPort, classpath,
+                    "http://www.javaperformancetuning.co.za/sites/default/files"
+                            + "/GarbageGeneratorApp/GarbageGeneratorApp.jnlp", gcOptions,true);
+//            procId = gen.startTestApp(javaPath+"ws", tmpPort, classpath,
+//                    "file:///home/mark/Projects/gcexplorer/"
+//                            + "GarbageGeneratorApp/build/dist/GarbageGeneratorApp.jnlp", 
+//                    gcOptions,true);
+
         }
 
         String javaVersion = gen.getJavaVersion(procId);

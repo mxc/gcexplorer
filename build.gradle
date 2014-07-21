@@ -1,7 +1,13 @@
+
+
 subprojects {
     apply plugin: 'java'
     sourceCompatibility = '1.8'
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    project.ext {
+        password=''
+    }
     
     ext {
         vendor = 'Jumping Bean'
@@ -121,15 +127,17 @@ project (':GCExplorerUI'){
             copy{
                 from configurations.compile
                 into "$buildDir/libs"
-                //exclude  { details->details.file.name.equals("tools.jar") }
+                exclude  { details->details.file.name.equals("GarbageGeneratorApp.jar") }
                 exclude  { details->details.file.name.equals("GCExplorerUI.jar") }
             }
             
-            def password = System.console().readPassword("\n\$ Enter keystore password: ")
+            if (project.ext.password.isEmpty()){
+                project.ext.password = System.console().readPassword("\n\$ Enter keystore password: ")
+            }
             
             project.exec {
                 commandLine "../javafxpackager.sh"
-                args "$password"
+                args "$project.ext.password"
             }
         }
     }
@@ -158,9 +166,32 @@ project (':GarbageGeneratorApp'){
         manifest {
             attributes "Main-Class":  "za.co.jumpingbean.gc.testapp.GarbageGeneratorApp"
             attributes  'Implementation-Title': 'GarbageGeneratorApp'
+            attributes  'Permissions': 'all-permissions'
+            attributes  'Application-Name': 'Gargabge Generator App'
+            attributes  'Application-Library-Allowable-Codebase': '*' 
+            attributes  'Caller-Allowable-Codebase': '*'
+            
         }
     }
 
+
+    task dist(dependsOn:jar) {
+         
+        doLast {
+
+            if (project.ext.password.isEmpty()){
+                project.ext.password = System.console().readPassword("\n\$ Enter keystore password: ")
+            }
+
+            project.exec {
+                commandLine "../javapackager-garbagegenapp.sh"
+                args "$project.ext.password","$project.parent.projectDir"
+            }
+            
+        }
+       
+    }
+    
 }
 
 

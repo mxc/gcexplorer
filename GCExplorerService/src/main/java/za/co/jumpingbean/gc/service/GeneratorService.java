@@ -40,7 +40,8 @@ public class GeneratorService {
     Lock wlock = rwLock.writeLock();
     Lock rlock = rwLock.readLock();
 
-    public UUID startTestApp(String javaPath,String port, String classPath, String mainClass, List<String> gcOptions)
+    public UUID startTestApp(String javaPath, String port, String classPath,
+            String mainClass, List<String> gcOptions, boolean isWebStart)
             throws IllegalStateException, IOException {
         ProcessParams params;
 
@@ -49,7 +50,7 @@ public class GeneratorService {
         } else {
             params = new ProcessParams(port, classPath, mainClass, gcOptions);
         }
-        return this.startTestApp(javaPath,params);
+        return this.startTestApp(javaPath, params, isWebStart);
     }
 
     public UUID connectToJavaProcess(String url, String username, String password) throws IOException {
@@ -87,19 +88,27 @@ public class GeneratorService {
         }
     }
 
-    public UUID startTestApp(String javaPath,ProcessParams params) throws IllegalStateException, IOException {
+    public UUID startTestApp(String javaPath, ProcessParams params, boolean isWebStart) throws IllegalStateException, IOException {
         System.out.println("Starting up....");
         List<String> cmd = new LinkedList<>();
         cmd.add(javaPath);
-        if (params.getClassPath() != null && !params.getClassPath().isEmpty()) {
-            cmd.add("-cp");
-            cmd.add(params.getClassPath());
+        if (isWebStart) {
+            cmd.add("-J-Dcom.sun.management.jmxremote");
+            cmd.add("-J-Dcom.sun.management.jmxremote.port=" + params.getPort());
+            cmd.add("-J-Dcom.sun.management.jmxremote.ssl=false");
+            cmd.add("-J-Dcom.sun.management.jmxremote.authenticate=false");
+            cmd.add("-J-Djava.rmi.server.hostname=127.0.0.1");
+        } else {
+            if (params.getClassPath() != null && !params.getClassPath().isEmpty()) {
+                cmd.add("-cp");
+                cmd.add(params.getClassPath());
+            }
+            cmd.add("-Dcom.sun.management.jmxremote");
+            cmd.add("-Dcom.sun.management.jmxremote.port=" + params.getPort());
+            cmd.add("-Dcom.sun.management.jmxremote.ssl=false");
+            cmd.add("-Dcom.sun.management.jmxremote.authenticate=false");
+            cmd.add("-Djava.rmi.server.hostname=127.0.0.1");
         }
-        cmd.add("-Dcom.sun.management.jmxremote");
-        cmd.add("-Dcom.sun.management.jmxremote.port=" + params.getPort());
-        cmd.add("-Dcom.sun.management.jmxremote.ssl=false");
-        cmd.add("-Dcom.sun.management.jmxremote.authenticate=false");
-        cmd.add("-Djava.rmi.server.hostname=127.0.0.1");
         if (!params.getGcOptions().isEmpty()) {
             cmd.addAll(params.getGcOptions());
         }
@@ -107,10 +116,10 @@ public class GeneratorService {
 
         ProcessBuilder procBuilder = new ProcessBuilder(cmd);
         Process proc = procBuilder.start();
-        
+
         BufferedReader reader = new BufferedReader(new InputStreamReader(
                 proc.getInputStream()));
-        
+
         BufferedReader error = new BufferedReader(new InputStreamReader(
                 proc.getErrorStream()));
         try {
@@ -164,7 +173,7 @@ public class GeneratorService {
             error.close();
             reader.close();
             proc.destroy();
-            throw new IllegalStateException("Process terminate before initialistion could complete. "+str);
+            throw new IllegalStateException("Process terminate before initialistion could complete. " + str);
         }
     }
 
