@@ -282,7 +282,7 @@ public class MainForm implements Initializable {
         Parent pane;
         try {
             pane = loader.load();
-            this.addTab(pane, procId, controller);
+            this.addTab(pane, procId,controller);
             if (disableGeneratorButton) {
                 controller.disableGenerateObjectsButton();
             }
@@ -292,15 +292,15 @@ public class MainForm implements Initializable {
 
     }
 
-    private void addTab(Parent pane, UUID procId, ProcessViewForm controller) {
+    private void addTab(Parent pane, UUID procId,ProcessViewForm controller) {
         Tab tab = new Tab();
-        tab.setUserData(procId);
-        //tab.setUserData(controller);
+        //tab.setUserData(procId);
+        tab.setUserData(controller);
         tab.setOnClosed(new EventHandler<Event>() {
 
             @Override
             public void handle(Event event) {
-                UUID id = (UUID) (tab.getUserData());
+                UUID id = ((ProcessViewForm) (tab.getUserData())).getProcUUID();
                 processData.remove(app.getProcessController().getUUIDProcess(id));
                 app.getProcessController().stopProcess(id);
 

@@ -43,8 +43,6 @@ import javafx.scene.chart.StackedBarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -161,6 +159,11 @@ public class ProcessViewForm implements Initializable {
         this.txtGeneratorStatus.disableProperty().setValue(Boolean.TRUE);
     }
 
+    public UUID getProcUUID() {
+        return procId;
+    }
+
+    
     private void showGarbageOptionsForm(ActionEvent e) {
         Stage stage = new Stage();
         try {
