@@ -6,7 +6,7 @@
     		    
                 }
 
-    }
+    };
 }(jQuery));
 
 function launchApplication(jnlpfile) {
