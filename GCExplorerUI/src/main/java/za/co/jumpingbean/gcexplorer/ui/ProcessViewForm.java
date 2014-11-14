@@ -30,6 +30,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -50,6 +51,7 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
 import javafx.util.converter.NumberStringConverter;
 
 /**
@@ -87,6 +89,10 @@ public class ProcessViewForm implements Initializable {
     private GridPane gridPane;
     @FXML
     private StackedAreaChart<Number, Number> chtStackedAreaTotalMemory;
+    @FXML
+    private Button btnViewGCLog;
+    private Stage gcViewForm;
+
 
     public ProcessViewForm(GCExplorer app, UUID procId) {
         this.procId = procId;
@@ -134,6 +140,7 @@ public class ProcessViewForm implements Initializable {
             }
 
         });
+        btnViewGCLog.setOnAction(this::showGCLogView);
         app.getProcessController().addGCInfoEventListener(procId, new ChangeListener<String>() {
 
             @Override
@@ -163,7 +170,32 @@ public class ProcessViewForm implements Initializable {
         return procId;
     }
 
-    
+    private void showGCLogView(ActionEvent e) {
+        if (gcViewForm != null) {
+            gcViewForm.toFront();
+            return;
+        }
+        gcViewForm = new Stage();
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("gcLogView.fxml")
+            );
+            GCLogViewForm controller = new GCLogViewForm(app, procId,this);
+            loader.setController(controller);
+            Parent pane = loader.load();
+            Scene scene = new Scene(pane);
+            gcViewForm.setScene(scene);
+            gcViewForm.initModality(Modality.NONE);
+            gcViewForm.initOwner(gridPane.getParent().getScene().getWindow());
+            gcViewForm.initStyle(StageStyle.DECORATED);
+            gcViewForm.setTitle(app.getProcessController().getProcName(procId));
+            gcViewForm.setOnCloseRequest(controller);
+            gcViewForm.show();
+        } catch (IOException ex) {
+            Logger.getLogger(ProcessViewForm.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     private void showGarbageOptionsForm(ActionEvent e) {
         Stage stage = new Stage();
         try {
@@ -182,7 +214,6 @@ public class ProcessViewForm implements Initializable {
         } catch (IOException ex) {
             Logger.getLogger(ProcessViewForm.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
     private void configureChart(XYChart chart) {
@@ -219,6 +250,10 @@ public class ProcessViewForm implements Initializable {
                 }
             }
         });
+    }
+
+    void resetGCLogView() {
+        this.gcViewForm=null;
     }
 
 }

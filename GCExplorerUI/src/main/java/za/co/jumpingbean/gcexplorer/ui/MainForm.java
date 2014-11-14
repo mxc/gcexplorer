@@ -306,7 +306,7 @@ public class MainForm implements Initializable {
 
             }
         });
-        tab.setText("Proc " + app.getProcessController().getNumber(procId));
+        tab.setText(app.getProcessController().getProcName(procId));
         tab.setContent(pane);
         tabPane.getTabs().add(tab);
         this.processData.add(this.app.getProcessController().getUUIDProcess(procId));
@@ -347,7 +347,7 @@ public class MainForm implements Initializable {
         vBox.getChildren().add(hBox);
         vBox.getChildren().add(btn);
         stage.setScene(new Scene(vBox));
-        stage.setTitle("Set Data Set Size");
+        //stage.setTitle("Set Data Set Size");
         stage.initModality(Modality.WINDOW_MODAL);
         stage.initOwner(this.tblDetails.getParent().getScene().getWindow());
         stage.initStyle(StageStyle.UTILITY);

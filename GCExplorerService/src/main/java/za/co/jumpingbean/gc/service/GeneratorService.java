@@ -27,8 +27,6 @@ import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.management.remote.JMXServiceURL;
 import za.co.jumpingbean.gc.service.constants.DESC;
 import za.co.jumpingbean.gc.testapp.GarbageGeneratorApp;
@@ -378,12 +376,23 @@ public class GeneratorService {
         }
     }
 
+
     private String getError(BufferedReader error) throws IOException {
         StringBuilder str = new StringBuilder();
         while (error.ready()) {
             str.append(error.readLine() );
         }
         return str.toString();
+    }
+    
+    public String getConsoleLog(UUID procId) {
+         try {
+            rlock.lock();
+            return ((ControlableProcess)this.processes.get(procId)).readProcessOutputLine();
+        } finally {
+            rlock.unlock();
+        }       
+
     }
 
 }

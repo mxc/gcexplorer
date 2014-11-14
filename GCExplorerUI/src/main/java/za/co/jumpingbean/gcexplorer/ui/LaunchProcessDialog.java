@@ -106,8 +106,19 @@ public class LaunchProcessDialog implements Initializable {
     private TextField txtMaxGCPauseMillis;
     @FXML
     private RadioButton rdbUseParNewGC;
+
     @FXML
-    private RadioButton rdbDefault;
+    private RadioButton rdbVerboseGC;
+    @FXML
+    private RadioButton rdbPrintGCDetails;
+    @FXML
+    private RadioButton rdbPrintTenuringDistribution;
+    @FXML
+    private RadioButton rdbPrintTimeStamp;
+    @FXML
+    private RadioButton rdbPrintDateStamp;
+    
+
 
     private final GCExplorer app;
     private final MainForm parent;
@@ -166,24 +177,8 @@ public class LaunchProcessDialog implements Initializable {
         this.rdbParallelOld.setUserData("-XX:+UseParallelOldGC");
         this.rdbUseAdaptiveSizePolicy.setUserData("-XX:+UseAdaptiveSizePolicy");
         this.rdbUseCMSInitiatingOccupancyOnly.setUserData("-XX:+UseCMSInitiatingOccupancyOnly");
-        this.rdbDefault.setUserData("");
         this.txtStatus.setWrapText(true);
         
-        this.rdbDefault.setOnAction(new EventHandler() {
-            @Override
-            public void handle(Event event) {
-                boolean disable = false;
-                if (rdbDefault.isSelected()) {
-                    disable = true;
-                }
-                setCMSOptionsState(disable);
-                setCommonCMSG1State(disable);
-                setG1OptionsState(disable);
-                setParallelGCOptionsState(disable);
-                setCommonParallelG1State(disable);
-            }
-        });
-
         this.rdbSerial.setOnAction(new EventHandler() {
 
             @Override
@@ -429,7 +424,27 @@ public class LaunchProcessDialog implements Initializable {
         if (!rdbUseCompressedOops.isDisabled() && rdbUseCompressedOops.isSelected()) {
             list.add("-XX:+UseCompressedOops");
         }
+        
+        if (rdbVerboseGC.isSelected()){
+            list.add("-verbose:gc");
+        }
+        
+        if (rdbPrintDateStamp.isSelected()){
+            list.add("-XX:+PrintGCDateStamps");
+        }
 
+        if (rdbPrintTimeStamp.isSelected()){
+            list.add("-XX:+PrintGCTimeStamps");
+        }        
+        
+        if (rdbPrintGCDetails.isSelected()){
+            list.add("-XX:+PrintGCDetails");
+        }
+        
+        if (rdbPrintTenuringDistribution.isSelected()){
+            list.add("-XX:+PrintTenuringDistribution");
+        }
+    
         if (errorMsg.toString().isEmpty()) {
             return list;
         } else {
