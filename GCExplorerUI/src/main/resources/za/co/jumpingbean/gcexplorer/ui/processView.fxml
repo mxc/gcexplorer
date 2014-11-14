@@ -85,10 +85,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </children>
 </VBox>
 </children>
-</HBox><Label fx:id="lblGCInfo" focusTraversable="false" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.valignment="CENTER" /><TextArea fx:id="lblSysInfo" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" GridPane.rowIndex="3">
+</HBox><TextArea fx:id="lblSysInfo" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" GridPane.rowIndex="3">
 <GridPane.margin>
 <Insets right="10.0" />
 </GridPane.margin></TextArea>
+            <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+               <children>
+                  <Label fx:id="lblGCInfo" focusTraversable="false" text="Label" />
+                  <Button fx:id="btnViewGCLog" mnemonicParsing="false" text="View GC Log" />
+               </children>
+            </VBox>
             </children>
         </GridPane>
         <StackedBarChart fx:id="chtStackedBarTotalMemory" alternativeRowFillVisible="false" horizontalZeroLineVisible="false" prefWidth="100.0" title="Total Memory" verticalZeroLineVisible="false">

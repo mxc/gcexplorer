@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="6.0" prefWidth="50.0" />
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="370.0" minWidth="10.0" prefWidth="312.0" />
 <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
   </columnConstraints>
   <rowConstraints>
 <RowConstraints maxHeight="49.0" minHeight="10.0" prefHeight="25.0" vgrow="NEVER" />
@@ -58,8 +59,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <RowConstraints maxHeight="515.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 <RowConstraints maxHeight="515.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
 <RowConstraints maxHeight="515.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="515.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="515.0" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
   </rowConstraints>
-<children><TextArea fx:id="txtStatus" editable="false" prefHeight="157.0" prefWidth="401.0" style="-fx-text-fill: FIREBRICK;" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="24" GridPane.rowSpan="2" />
+<children><TextArea fx:id="txtStatus" editable="false" prefHeight="157.0" prefWidth="401.0" style="-fx-text-fill: FIREBRICK;" GridPane.columnIndex="2" GridPane.columnSpan="3" GridPane.rowIndex="26" GridPane.rowSpan="2" />
 <RadioButton fx:id="rdbSerial" mnemonicParsing="false" selected="true" text="Serial GC" GridPane.rowIndex="1">
 <toggleGroup>
 <ToggleGroup fx:id="garbageCollectorGroup" />
@@ -83,7 +86,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <RadioButton fx:id="rdbParallelOld" mnemonicParsing="false" text="Parallel Old GC" toggleGroup="$garbageCollectorGroup" GridPane.rowIndex="2">
 <GridPane.margin>
 <Insets left="10.0" />
-</GridPane.margin></RadioButton><Button fx:id="btnLaunch" mnemonicParsing="false" prefHeight="25.0" prefWidth="218.0" text="Launch Process" GridPane.rowIndex="24" /><Label text="Garbage Collection Type" GridPane.columnSpan="4" GridPane.halignment="CENTER">
+</GridPane.margin></RadioButton><Button fx:id="btnLaunch" mnemonicParsing="false" prefHeight="25.0" prefWidth="218.0" text="Launch Process" GridPane.rowIndex="27" /><Label text="Garbage Collection Type" GridPane.columnSpan="4" GridPane.halignment="CENTER">
 <font>
 <Font name="System Bold" size="19.0" />
 </font></Label><Label text="Heap Sizing Options" GridPane.columnSpan="4" GridPane.halignment="CENTER" GridPane.rowIndex="4">
@@ -301,5 +304,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <Insets left="10.0" />
 </padding>
 </RadioButton>
+      <RadioButton fx:id="rdbVerboseGC" mnemonicParsing="false" text="-verbose:gc" GridPane.rowIndex="24">
+         <padding>
+            <Insets left="10.0" />
+         </padding>
+      </RadioButton>
+      <RadioButton fx:id="rdbPrintGCDetails" mnemonicParsing="false" text="-XX:+PrintGCDetails" GridPane.rowIndex="25">
+         <padding>
+            <Insets left="10.0" />
+         </padding>
+      </RadioButton>
+      <RadioButton fx:id="rdbPrintTimeStamp" mnemonicParsing="false" text="-XX:+PrintGCTimeStamps" GridPane.columnIndex="2" GridPane.rowIndex="23">
+         <GridPane.margin>
+            <Insets left="10.0" />
+         </GridPane.margin>
+      </RadioButton>
+      <RadioButton fx:id="rdbPrintDateStamp" mnemonicParsing="false" text="-XX:+PrintGCDateStamps" GridPane.columnIndex="2" GridPane.rowIndex="24">
+         <padding>
+            <Insets left="10.0" />
+         </padding>
+      </RadioButton>
+      <RadioButton fx:id="rdbPrintTenuringDistribution" mnemonicParsing="false" text="-XX:+PrintTenuringDistribution" GridPane.columnIndex="2" GridPane.rowIndex="25">
+         <padding>
+            <Insets left="10.0" />
+         </padding>
+      </RadioButton>
 </children>
 </GridPane>

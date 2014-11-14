@@ -52,12 +52,12 @@ public class GeneratorService {
         return this.startTestApp(params);
     }
 
-    public UUID connectToJavaProcess(String url,String username,String password) throws IOException {
+    public UUID connectToJavaProcess(String url, String username, String password) throws IOException {
         try {
             ProcessObject procObj = new ProcessObject(
                     GarbageGeneratorApp.class.getCanonicalName(),
                     JMXQueryRunner.createJMXQueryRunner(new JMXServiceURL(url),
-                            username,password));
+                            username, password));
             try {
                 wlock.lock();
                 processes.put(procObj.getId(), procObj);
@@ -355,6 +355,15 @@ public class GeneratorService {
         } finally {
             rlock.unlock();
         }
+    }
+
+    public String getConsoleLog(UUID procId) {
+         try {
+            rlock.lock();
+            return ((ControlableProcess)this.processes.get(procId)).readProcessOutputLine();
+        } finally {
+            rlock.unlock();
+        }       
     }
 
 }

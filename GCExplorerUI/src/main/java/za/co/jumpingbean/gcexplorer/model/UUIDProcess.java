@@ -21,13 +21,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 import za.co.jumpingbean.gcexplorer.ui.EdenMemoryPool;
+import za.co.jumpingbean.gcexplorer.ui.GCLogViewForm;
 
 /**
  *
@@ -50,12 +53,14 @@ public class UUIDProcess {
     private final SimpleStringProperty sysInfo = new SimpleStringProperty();
     private final String initParams;
     private final String javaVersion;
+    private final ObservableList<String> consoleLog;
 
     public UUIDProcess(UUID id, EdenMemoryPool edenPool,
             SurvivorMemoryPool survivorPool, 
             EmptySurvivorMemoryPool emptySurvivorMemoryPool, 
             OldGenMemoryPool oldGenPool, PermGenMemoryPool permGenPool, 
             String initParams,String javaVersion) {
+        this.consoleLog = FXCollections.observableList(new LinkedList<String>());
         this.id = id;
         number = ++count;
         this.javaVersion=javaVersion;
@@ -98,6 +103,7 @@ public class UUIDProcess {
         stackedAreaChartSeries.addAll(2, this.survivorPool.usedFreeSeriesList);
         stackedAreaChartSeries.addAll(4, this.emptySurvivorPool.usedFreeSeriesList);
         stackedAreaChartSeries.addAll(6, this.oldGenPool.usedFreeSeriesList);
+        
 
         edenPool.getUsed().measureProperty().addListener(new ChangeListener<Number>() {
 
@@ -258,6 +264,10 @@ public class UUIDProcess {
         this.gcInfo.addListener(changeListener);
     }
 
+    public void addGCLogViewer(ListChangeListener changeListener){
+        this.consoleLog.addListener(changeListener);
+    }
+    
     private double getMaxYoungGen() {
         return this.getEdenPool().getMax().getMeasure() + this.getSurvivorPool().getMax().getMeasure() * 2;
     }
@@ -272,6 +282,14 @@ public class UUIDProcess {
 
     public int getNumber() {
         return this.number;
+    }
+
+    public void updateConsoleLog(String log) {
+            consoleLog.add(log);
+    }
+
+    public void removeLogListener(ListChangeListener aThis) {
+       this.consoleLog.removeListener(aThis); 
     }
 
 }

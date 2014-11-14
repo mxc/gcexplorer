@@ -176,6 +176,11 @@ public class ProcessController implements Runnable {
 
                 String gcInfo = gen.getGCInfo(procId);
                 proc.setGCInfo(gcInfo);
+                
+                String log =  gen.getConsoleLog(procId);
+                proc.updateConsoleLog(log);
+                
+                
                 //force a wait to update sys info block. Sometimes it doesn't
                 //update display.
                 if (proc.getDataItems().get(0).getFreeCommittedSeries().get(0).getData().size() < 6) {
@@ -411,6 +416,10 @@ public class ProcessController implements Runnable {
 
     public List<String> getLocalProcessesList() {
         return gen.getLocalProcessesList();
+    }
+
+    String getProcName(UUID procId) {
+                return "Proc " +  this.getNumber(procId);
     }
 
 }
