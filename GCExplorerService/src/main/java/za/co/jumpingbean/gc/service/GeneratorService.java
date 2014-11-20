@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -107,7 +108,7 @@ public class GeneratorService {
 
         ProcessBuilder procBuilder = new ProcessBuilder(cmd);
         Process proc = procBuilder.start();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        Scanner reader = new Scanner(proc.getInputStream());
         try {
             if (proc.exitValue() != 0) {
                 BufferedReader error = new BufferedReader(new InputStreamReader(
@@ -357,10 +358,10 @@ public class GeneratorService {
         }
     }
 
-    public String getConsoleLog(UUID procId) {
+    public String getGCLogEntries(UUID procId) {
          try {
             rlock.lock();
-            return ((ControlableProcess)this.processes.get(procId)).readProcessOutputLine();
+            return ((ControlableProcess)this.processes.get(procId)).getGCLogEntries();
         } finally {
             rlock.unlock();
         }       

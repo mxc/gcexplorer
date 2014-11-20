@@ -16,6 +16,7 @@
  */
 package za.co.jumpingbean.gcexplorer.ui;
 
+import za.co.jumpingbean.utils.Units;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;

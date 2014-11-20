@@ -18,6 +18,8 @@ package za.co.jumpingbean.gc.service;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -29,14 +31,15 @@ public class ProcessParams {
     private String classPath;
     private String mainClass;
     private List<String> gcOptions;
-    private List<String> filterOptions;
+    private String logFilename="";
 
+    //private List<String> filterOptions;
     public ProcessParams(String port, String classPath, String mainClass) {
         checkNullEmptyString(port);
         checkValidPort(port);
         checkNullEmptyString(mainClass);
-        if (classPath==null){
-            classPath="";
+        if (classPath == null) {
+            classPath = "";
         }
         this.port = port;
         this.classPath = classPath;
@@ -47,6 +50,13 @@ public class ProcessParams {
     public ProcessParams(String port, String classPath, String mainClass, List<String> gcOptions) {
         this(port, classPath, mainClass);
         this.gcOptions = gcOptions;
+        Pattern pattern = Pattern.compile("-Xloggc:(gc-\\d+\\.log)");
+        for (String option : gcOptions) {
+            Matcher matcher = pattern.matcher(option);
+            if (matcher.find()) {
+                logFilename = matcher.group(1);
+            }
+        }
     }
 
     public void addGCOption(String option) {
@@ -73,8 +83,8 @@ public class ProcessParams {
     }
 
     public void setClassPath(String classPath) {
-        if (classPath==null){
-            classPath="";
+        if (classPath == null) {
+            classPath = "";
         }
         this.classPath = classPath;
     }
@@ -116,12 +126,16 @@ public class ProcessParams {
         }
     }
 
-    public String getStartupParameters(){
+    public String getStartupParameters() {
         StringBuilder str = new StringBuilder("System Info:\n\r");
-        for (String tmpString : gcOptions){
+        for (String tmpString : gcOptions) {
             str.append(tmpString).append("\n\r");
         }
         return str.toString();
+    }
+
+    String getLogFilename() {
+        return this.logFilename;
     }
 
 }

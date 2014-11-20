@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package za.co.jumpingbean.gcexplorer.ui;
+package za.co.jumpingbean.utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,12 +44,14 @@ import za.co.jumpingbean.gc.service.constants.DESC;
 import za.co.jumpingbean.gcexplorer.model.MemoryPool;
 import za.co.jumpingbean.gcexplorer.model.ProcessFactory;
 import za.co.jumpingbean.gcexplorer.model.UUIDProcess;
+import za.co.jumpingbean.gcexplorer.ui.GCExplorer;
+import za.co.jumpingbean.gcexplorer.ui.ProcessViewForm;
 
 /**
  *
  * @author mark
  */
-public class ProcessController implements Runnable {
+public class RunningProcessUpdater implements Runnable {
 
     private final Map<UUID, UUIDProcess> liveProcesses
             = new HashMap<>();
@@ -64,7 +66,7 @@ public class ProcessController implements Runnable {
 
     ExecutorService executorService = Executors.newFixedThreadPool(2);
 
-    ProcessController(GCExplorer main) {
+    public RunningProcessUpdater(GCExplorer main) {
         this.main = main;
     }
 
@@ -100,7 +102,7 @@ public class ProcessController implements Runnable {
                 try {
                     liveProcesses.wait(millisecs);
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(ProcessController.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(RunningProcessUpdater.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -176,11 +178,12 @@ public class ProcessController implements Runnable {
 
                 String gcInfo = gen.getGCInfo(procId);
                 proc.setGCInfo(gcInfo);
-                
-                String log =  gen.getConsoleLog(procId);
-                proc.updateConsoleLog(log);
-                
-                
+
+                String log = gen.getGCLogEntries(procId);
+                if (!log.isEmpty()) {
+                    proc.updateConsoleLog(log);
+                }
+
                 //force a wait to update sys info block. Sometimes it doesn't
                 //update display.
                 if (proc.getDataItems().get(0).getFreeCommittedSeries().get(0).getData().size() < 6) {
@@ -210,16 +213,16 @@ public class ProcessController implements Runnable {
         UUID id = gen.connectToJavaProcess(pid);
         String javaVersion = gen.getJavaVersion(id);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(id, ProcessFactory.newProcess(id, cmdLine,javaVersion));
+            this.liveProcesses.put(id, ProcessFactory.newProcess(id, cmdLine, javaVersion));
         }
         return id;
     }
 
-    public UUID connectToProcess(String url,String username, String password) throws IOException {
-        UUID id = gen.connectToJavaProcess(url,username,password);
+    public UUID connectToProcess(String url, String username, String password) throws IOException {
+        UUID id = gen.connectToJavaProcess(url, username, password);
         String javaVersion = gen.getJavaVersion(id);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(id, ProcessFactory.newProcess(id, "",javaVersion));
+            this.liveProcesses.put(id, ProcessFactory.newProcess(id, "", javaVersion));
         }
         return id;
     }
@@ -265,8 +268,8 @@ public class ProcessController implements Runnable {
                 "za.co.jumpingbean.gc.testApp.GarbageGeneratorApp", gcOptions);
         String javaVersion = gen.getJavaVersion(procId);
         synchronized (liveProcesses) {
-            this.liveProcesses.put(procId, 
-                    ProcessFactory.newProcess(procId, gcOptions.toString(),javaVersion));
+            this.liveProcesses.put(procId,
+                    ProcessFactory.newProcess(procId, gcOptions.toString(), javaVersion));
         }
         return procId;
     }
@@ -367,7 +370,7 @@ public class ProcessController implements Runnable {
 //    public double getMaxHeap(UUID uuid){
 //        return this.liveProcesses.get(uuid).getMaxHeap();
 //    }
-    void addSystemInfoEventListener(UUID procId, ChangeListener changeListener) {
+    public void addSystemInfoEventListener(UUID procId, ChangeListener changeListener) {
         synchronized (liveProcesses) {
             if (this.liveProcesses.get(procId) != null) {
                 this.liveProcesses.get(procId).addSystemInfoEventListener(changeListener);
@@ -375,7 +378,7 @@ public class ProcessController implements Runnable {
         }
     }
 
-    void addGCInfoEventListener(UUID procId, ChangeListener changeListener) {
+    public void addGCInfoEventListener(UUID procId, ChangeListener changeListener) {
         synchronized (liveProcesses) {
             if (this.liveProcesses.get(procId) != null) {
                 this.liveProcesses.get(procId).addGCInfoEventListener(changeListener);
@@ -383,7 +386,7 @@ public class ProcessController implements Runnable {
         }
     }
 
-    void updateNumberOfDataPoints(int numDataPoints) {
+    public void updateNumberOfDataPoints(int numDataPoints) {
         synchronized (liveProcesses) {
             for (UUIDProcess proc : liveProcesses.values()) {
                 proc.updateNumDataPoints(numDataPoints);
@@ -402,7 +405,7 @@ public class ProcessController implements Runnable {
 
     }
 
-    void releaseLongLivedInstances(UUID id, int numInstances, boolean reverse) {
+    public void releaseLongLivedInstances(UUID id, int numInstances, boolean reverse) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -418,8 +421,8 @@ public class ProcessController implements Runnable {
         return gen.getLocalProcessesList();
     }
 
-    String getProcName(UUID procId) {
-                return "Proc " +  this.getNumber(procId);
+    public String getProcName(UUID procId) {
+        return "Proc " + this.getNumber(procId);
     }
 
 }

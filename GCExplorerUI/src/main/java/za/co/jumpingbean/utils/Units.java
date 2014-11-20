@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package za.co.jumpingbean.gcexplorer.ui;
+package za.co.jumpingbean.utils;
 
 /*
  * To change this license header, choose License Headers in Project Properties.

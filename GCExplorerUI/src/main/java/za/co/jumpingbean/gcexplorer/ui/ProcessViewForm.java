@@ -16,6 +16,7 @@
  */
 package za.co.jumpingbean.gcexplorer.ui;
 
+import za.co.jumpingbean.utils.Units;
 import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
@@ -30,7 +31,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -51,7 +51,6 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
 import javafx.util.converter.NumberStringConverter;
 
 /**
@@ -236,7 +235,7 @@ public class ProcessViewForm implements Initializable {
         chtStackedAreaTotalMemory.getYAxis().setLabel(unit.getName());
     }
 
-    void setGenStatus(String str) {
+    public void setGenStatus(String str) {
         Platform.runLater(new Runnable() {
 
             @Override

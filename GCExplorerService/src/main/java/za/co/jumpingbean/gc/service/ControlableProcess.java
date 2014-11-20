@@ -17,7 +17,13 @@
 
 package za.co.jumpingbean.gc.service;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,13 +36,23 @@ public class ControlableProcess extends ProcessObject {
     private final ProcessParams params;
     private final Process process;
     private final ProcOutputReaderList procOutputReader;
-
+    private BufferedReader reader;
+    
+    
     public ControlableProcess(String name,Process proc, ProcessParams params,
             ProcOutputReaderList output, JMXQueryRunner qry) {
         super(name,qry);
         this.process = proc;
         this.params = params;
         procOutputReader = output;
+        if (!params.getLogFilename().isEmpty()){
+            try {
+                reader = new BufferedReader(new FileReader(new File(params.getLogFilename())));
+            } catch (FileNotFoundException ex) {
+                reader=null;
+                System.out.println("log file not found");
+            }
+        }
     }
 
     public ProcessParams getParams() {
@@ -47,11 +63,32 @@ public class ControlableProcess extends ProcessObject {
         return process;
     }
     
+    String getGCLogEntries(){
+        if (reader!=null){
+            try {
+                StringBuilder line=new StringBuilder();
+                String l = reader.readLine();
+                while(l!=null){
+                    line.append(String.format("%s%n",l));
+                    l = reader.readLine();
+                }
+                return line.toString();
+            } catch (IOException ex) {
+                System.out.println("Error reading line from log file");
+                return "";
+            }
+        }
+        return readProcessOutputLine();
+    }
+    
     String readProcessOutputLine() {
-        StringBuilder str = new StringBuilder(200);
         List<String> list = procOutputReader.readList();
+        if (list.isEmpty()){
+            return "";
+        }
+        StringBuilder str = new StringBuilder(200);
         for (String tmpStr : list) {
-            str.append(tmpStr);
+            str.append(String.format("%s%n",tmpStr));
         }
         return str.toString();
     }

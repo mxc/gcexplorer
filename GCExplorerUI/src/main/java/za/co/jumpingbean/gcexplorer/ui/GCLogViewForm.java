@@ -46,7 +46,7 @@ public class GCLogViewForm implements ListChangeListener, EventHandler<WindowEve
             if (str.isEmpty()) {
                 continue;
             }
-            buf.append(str).append("\n\r");
+            buf.append(str);
         }
         if (buf.length() > 0) {
             Platform.runLater(new Runnable() {

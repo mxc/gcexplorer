@@ -18,7 +18,10 @@ package za.co.jumpingbean.gcexplorer.ui;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.time.temporal.TemporalUnit;
+import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.UUID;
@@ -34,6 +37,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.InputEvent;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 /**
@@ -116,6 +121,8 @@ public class LaunchProcessDialog implements Initializable {
     private RadioButton rdbPrintTimeStamp;
     @FXML
     private RadioButton rdbPrintDateStamp;
+    @FXML
+    private RadioButton rdbLoggc;
     
 
     private final GCExplorer app;
@@ -130,12 +137,11 @@ public class LaunchProcessDialog implements Initializable {
         //garbageCollectorGroup.getSelectedToggle();
         UUID procId;
         String selectedGC = (String) garbageCollectorGroup.getSelectedToggle().getUserData();
-        List<String> gcOptions;
-        try {
-            gcOptions = getSelectedOptions();
-        } catch (IllegalStateException ex) {
+        List<String> gcOptions=new LinkedList<String>();
+        if(!validateAndRetrieveOptions(gcOptions)){
             return;
         }
+
         try {
             procId = app.getProcessController().launchProcess(selectedGC, gcOptions);
         } catch (IOException |
@@ -163,7 +169,7 @@ public class LaunchProcessDialog implements Initializable {
             String txt = txtStatus.getText();
             txtStatus.setText(txt + "\n\rThere was an error adding tab to display");
         }
-
+        e.consume();
     }
 
     @Override
@@ -255,7 +261,6 @@ public class LaunchProcessDialog implements Initializable {
                 setCommonCMSG1State(disable);
                 setG1OptionsState(disable);
                 setParallelGCOptionsState(!disable);
-
             }
 
         });
@@ -313,8 +318,15 @@ public class LaunchProcessDialog implements Initializable {
         txtInitiatingHeapOccupancyPercent.disableProperty().set(state);
     }
 
-    private List<String> getSelectedOptions() {
-        ArrayList<String> list = new ArrayList<>();
+    public void validateAndRetrieveOptions(ActionEvent event){
+        validateAndRetrieveOptions(new LinkedList<String>());
+    }
+
+     public void validateAndRetrieveOptions(KeyEvent event){
+        validateAndRetrieveOptions(new LinkedList<String>());
+    }   
+    
+    private boolean validateAndRetrieveOptions(List<String> list) {
         StringBuilder errorMsg = new StringBuilder();
 
         this.addTextFieldOptionBetween(txtCMSInitiatingOccupancyFraction, "-XX:CMSInitiatingOccupancyFraction="
@@ -350,19 +362,22 @@ public class LaunchProcessDialog implements Initializable {
         this.addTextFieldOptionBetween(txtMaxTenuringThreshold, "-XX:MaxTenuringThreshold="
                 + txtMaxTenuringThreshold.getText(), "MaxTenuringThreshold", 0, 15, list, errorMsg);
 
-        int tmpMax = 0;
-        if (!txtMaxTenuringThreshold.getText().isEmpty()) {
-            try {
-                String text = txtMaxTenuringThreshold.getText();
-                tmpMax = Integer.parseInt(text);
-                tmpMax = tmpMax > 15 ? 15 : tmpMax;
-            } catch (NumberFormatException ex) {
-                tmpMax = 0;
-            }
-        }
-        this.addTextFieldOptionBetween(txtInitialTenuringThreshold, "-XX:InitialTenuringThreshold="
-                + txtInitialTenuringThreshold.getText(), "InitialTenuringThreshold", 0, tmpMax, list, errorMsg);
-
+//        int tmpMax = 0;
+//        if (!txtMaxTenuringThreshold.getText().isEmpty()) {
+//            try {
+//                String text = txtMaxTenuringThreshold.getText();
+//                tmpMax = Integer.parseInt(text);
+//                tmpMax = tmpMax > 15 ? 15 : tmpMax;
+//            } catch (NumberFormatException ex) {
+//                tmpMax = 0;
+//            }
+//        }
+//        this.addTextFieldOptionBetween(txtInitialTenuringThreshold, "-XX:InitialTenuringThreshold="
+//                + txtInitialTenuringThreshold.getText(), "InitialTenuringThreshold", 0, tmpMax, list, errorMsg);
+        
+        this.addTextFieldOption(txtInitialTenuringThreshold, "-XX:InitialTenuringThreshold="
+                + txtInitialTenuringThreshold.getText(),"-XX:InitialTenuringThreshold=", list, errorMsg);
+        
         this.addTextFieldOption(txtNewRatio, "-XX:NewRatio="
                 + txtNewRatio.getText(), "-XX:NewRatio=", list, errorMsg);
 
@@ -425,6 +440,12 @@ public class LaunchProcessDialog implements Initializable {
             list.add("-verbose:gc");
         }
         
+        if (rdbLoggc.isSelected()){
+            StringBuilder str = new StringBuilder("-Xloggc:gc-");
+            str.append(new SimpleDateFormat("yyyyMMddhhmm").format(new Date()));
+            list.add(str.append(".log").toString());
+        }
+        
         if (rdbPrintDateStamp.isSelected()){
             list.add("-XX:+PrintGCDateStamps");
         }
@@ -440,12 +461,18 @@ public class LaunchProcessDialog implements Initializable {
         if (rdbPrintTenuringDistribution.isSelected()){
             list.add("-XX:+PrintTenuringDistribution");
         }
-    
+
         if (errorMsg.toString().isEmpty()) {
-            return list;
+            StringBuilder options = new StringBuilder();
+            for (String str : list){
+                options.append(str).append(" ");
+            }
+            txtStatus.setText(options.toString());
+            return true;
         } else {
             txtStatus.setText(errorMsg.toString());
-            throw new IllegalStateException("Invalid parameter inputs");
+            return false;
+            //throw new IllegalStateException("Invalid parameter inputs");
         }
     }
 

@@ -16,14 +16,12 @@
  */
 package za.co.jumpingbean.gc.service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Objects;
+import java.util.Scanner;
 
 /**
  *
@@ -32,13 +30,14 @@ import java.util.logging.Logger;
 public class ProcOutputReaderList extends ArrayList<String> {
 
     final String[] output = new String[200];
-    private Integer counter = 0;
+    private Integer head = 0;
+    private Integer tail = 0;
     Thread thread;
-    private final BufferedReader reader;
+    private final Scanner reader;
     private boolean isRunning = true;
     private Process proc;
 
-    public ProcOutputReaderList(Process proc, BufferedReader reader) {
+    public ProcOutputReaderList(Process proc, Scanner reader) {
         if (proc.isAlive()) {
             isRunning = true;
         } else {
@@ -51,20 +50,22 @@ public class ProcOutputReaderList extends ArrayList<String> {
 
     public void init() {
         thread = new Thread(() -> {
-            try {
+            //try {
                 while (isRunning) {
                     if (proc.isAlive()) {
-                        String str = reader.readLine();
-                        if (str != null) {
-                            ProcOutputReaderList.this.addString(str);
+                        if (reader.hasNext()) {
+                            String str = reader.nextLine();
+                            if (str != null && !str.isEmpty()) {
+                                ProcOutputReaderList.this.addString(str);
+                            }
                         }
                     } else {
                         isRunning = false;
                     }
                 }
-            } catch (IOException ex) {
-                Logger.getLogger(ProcOutputReaderList.class.getName()).log(Level.SEVERE, null, ex);
-            }
+           // } catch (Exception ex) {
+           //     Logger.getLogger(ProcOutputReaderList.class.getName()).log(Level.SEVERE, null, ex);
+           // }
         });
         thread.setName("Process output reader");
         thread.setDaemon(true);
@@ -74,25 +75,34 @@ public class ProcOutputReaderList extends ArrayList<String> {
     public void addString(String msg) {
         synchronized (output) {
             System.out.println(msg);
-            output[counter] = msg;
-            if (counter >= 199) {
-                counter = 0;
+            output[head] = msg;
+            if (head >= 199) {
+                head = 0;
             } else {
-                counter++;
+                head++;
             }
         }
     }
 
     public List<String> readList() {
         List<String> tmp = new LinkedList<>();
+        if (Objects.equals(head, tail)) return tmp;
         synchronized (output) {
-            for (String str : output) {
-                tmp.add(str);
+            if (head < tail) {
+                for (int i = tail; i < output.length; i++) {
+                    tmp.add(String.format(output[i]));
+                }
+                for (int i = 0; i <= head; i++) {
+                    tmp.add(String.format(output[i]));
+                }
+            } else {
+                for (int i = tail; i <= head; i++) {
+                    tmp.add(String.format(output[i]));
+                }
             }
+            tail = head;
+            return tmp;
         }
-        Arrays.fill(output, 0, 199, "");
-        counter = 0;
-        return tmp;
     }
 
     void stop() {

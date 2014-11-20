@@ -16,9 +16,13 @@
  */
 package za.co.jumpingbean.gcexplorer.ui;
 
+import za.co.jumpingbean.utils.RunningProcessUpdater;
+import za.co.jumpingbean.utils.Units;
+import java.awt.AWTEvent;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -50,6 +54,9 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.InputEvent;
+import javafx.scene.input.InputMethodEvent;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -135,7 +142,7 @@ public class MainForm implements Initializable {
 
     private ObservableList<UUIDProcess> processData = FXCollections.observableArrayList(new ArrayList<>());
 
-    MainForm(ProcessController statsCollector, GCExplorer app) {
+    MainForm(RunningProcessUpdater statsCollector, GCExplorer app) {
         this.app = app;
     }
 
@@ -160,6 +167,13 @@ public class MainForm implements Initializable {
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(this.tblDetails.getParent().getScene().getWindow());
             stage.initStyle(StageStyle.UTILITY);
+//            stage.addEventHandler(ActionEvent.ACTION,new EventHandler(){
+//                @Override
+//                public void handle(Event event) {
+//                    ((LaunchProcessDialog)loader.getController()).validateAndRetrieveOptions(new LinkedList<String>());
+//                    event.consume();
+//                }
+//            });
             stage.show();
         } catch (IOException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);

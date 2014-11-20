@@ -16,6 +16,8 @@
  */
 package za.co.jumpingbean.gcexplorer.ui;
 
+import za.co.jumpingbean.utils.RunningProcessUpdater;
+import za.co.jumpingbean.utils.Units;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -29,7 +31,7 @@ import javafx.stage.Stage;
  */
 public class GCExplorer extends Application {
 
-    private ProcessController processController;
+    private RunningProcessUpdater processController;
     private Units units = Units.MB;
     
     public static void main(String[] args) {
@@ -46,7 +48,7 @@ public class GCExplorer extends Application {
   
     @Override
     public void start(Stage primaryStage) throws Exception {
-        processController = new ProcessController(this);
+        processController = new RunningProcessUpdater(this);
         Thread controllerThread = new Thread(processController, "GUI Stats Updater Controller");
         controllerThread.setDaemon(true);
         controllerThread.setName("GUI Process Controller");
@@ -70,7 +72,7 @@ public class GCExplorer extends Application {
         processController.stopAllProcesses();
     }
 
-    public ProcessController getProcessController() {
+    public RunningProcessUpdater getProcessController() {
         return this.processController;
     }
 
